@@ -762,8 +762,7 @@ FT_Error FontInfo::init(FT_Library& lib, const char* fontname, FT_Long face_idx,
 	FT_Error error = 0;
 
 	m_fontname = fontname;
-	std::transform(m_fontname.begin(), m_fontname.end(), m_fontname.begin(), ::tolower);
-
+	
 	error = FT_New_Face(lib, m_fontname.c_str(), face_idx, &m_face);
 	if ( error ) return error;
 

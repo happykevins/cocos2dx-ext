@@ -173,7 +173,7 @@ int get_system_default_hacklatin_fontshifty()
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
 const char* get_systemfont_path()
 {
-	return "";
+	return "/usr/share/fonts";
 }
 
 int get_system_default_ppi()
@@ -183,27 +183,27 @@ int get_system_default_ppi()
 
 int get_prefered_default_fontsize()
 {
-	return 16;
+	return 18;
 }
 
 const char* get_system_default_fontfile()
 {
-	return "simsun.ttc";
+	return "truetype/wqy/wqy-microhei.ttc";
 }
 
 const char* get_system_fallback_fontfile()
 {
-	return "arial.ttf";
+	return "truetype/freefont/FreeSerif.ttf";
 }
 
 const char* get_system_default_hacklatin_fontfile()
 {
-	return "courf.fon";
+	return NULL;
 }
 
 int get_system_default_hacklatin_fontshifty()
 {
-	return 1;
+	return 0;
 }
 
 

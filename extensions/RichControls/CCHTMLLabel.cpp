@@ -106,7 +106,7 @@ void CCHTMLLabel::draw()
 {
 	CCNode::draw();
 
-#if 1//CCRICH_DEBUG
+#if CCRICH_DEBUG
 	// draw bounding box
 	const CCSize& s = this->getContentSize();
 	CCPoint vertices[4]={

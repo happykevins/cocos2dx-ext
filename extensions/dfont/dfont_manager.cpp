@@ -590,7 +590,8 @@ FontFactory* FontFactory::instance()
 
 FontFactory::FontFactory()
 {
-	FT_Init_FreeType(&s_ft_library);
+	FT_Error error = FT_Init_FreeType(&s_ft_library);
+	CCAssert(error==0, "");
 }
 
 FontFactory::~FontFactory()
