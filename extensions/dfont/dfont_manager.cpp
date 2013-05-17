@@ -405,9 +405,9 @@ void FontCatalog::dump_textures(const char* prefix)
 
 FontCatalog::FontCatalog(FontInfo* f, int texture_width, int texture_height, int max_textures/*=2*/)
 	: m_font(f), 
+	m_max_textures(max_textures),
 	m_texture_width(texture_width), 
 	m_texture_height(texture_height), 
-	m_max_textures(max_textures),
 	m_previous_char_idx(0)
 {
 	int font_size = (int)(f->char_width_pt() > f->char_height_pt() ? f->char_width_pt() : f->char_height_pt());

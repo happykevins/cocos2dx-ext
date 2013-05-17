@@ -54,7 +54,7 @@ namespace dfont
 	typedef unsigned int uint32;
 
 	bool dump2tga(const std::string &filename, const unsigned int *pxl, uint16 width, uint16 height);
-#endif _DFONT_DEBUG
+#endif//_DFONT_DEBUG
 }
 
 #endif//__DFONT_UTILITY_H__

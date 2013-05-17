@@ -469,7 +469,7 @@ short REleHTMLNode::parsePixel(const std::string& str)
 float REleHTMLNode::parsePercent(const std::string& str)
 {
 	float ratio = 0.0f;
-	if ( !str.empty() && str.back() == '%' )
+	if ( !str.empty() && str[str.size()-1] == '%' )
 	{
 		std::string value_part = str.substr(0, str.size() - 1);
 		ratio = (float)atof(value_part.c_str());

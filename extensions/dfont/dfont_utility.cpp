@@ -170,6 +170,41 @@ int get_system_default_hacklatin_fontshifty()
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
 
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
+const char* get_systemfont_path()
+{
+	return "";
+}
+
+int get_system_default_ppi()
+{
+	return 0;
+}
+
+int get_prefered_default_fontsize()
+{
+	return 16;
+}
+
+const char* get_system_default_fontfile()
+{
+	return "simsun.ttc";
+}
+
+const char* get_system_fallback_fontfile()
+{
+	return "arial.ttf";
+}
+
+const char* get_system_default_hacklatin_fontfile()
+{
+	return "courf.fon";
+}
+
+int get_system_default_hacklatin_fontshifty()
+{
+	return 1;
+}
+
 
 #else
 #error  "dfont do not support this os!"
@@ -225,7 +260,7 @@ void dfont_default_initialize()
 			std::string fullpath = CCFileUtils::sharedFileUtils()
 				->fullPathForFilename(get_system_default_hacklatin_fontfile());
 
-			FontInfo* hackfont = font_catalog->font()->add_hackfont(
+			/*FontInfo* hackfont =*/ font_catalog->font()->add_hackfont(
 				fullpath.c_str(), latin_charset(), 
 				get_system_default_hacklatin_fontshifty());
 		}
