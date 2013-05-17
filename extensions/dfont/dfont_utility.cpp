@@ -23,6 +23,7 @@
  THE SOFTWARE.
  ****************************************************************************/
 #include "dfont_utility.h"
+#include "dfont_render.h"
 #include "dfont_manager.h"
 
 #include <cocos2d.h>
@@ -260,11 +261,23 @@ void dfont_default_initialize()
 			std::string fullpath = CCFileUtils::sharedFileUtils()
 				->fullPathForFilename(get_system_default_hacklatin_fontfile());
 
-			/*FontInfo* hackfont =*/ font_catalog->font()->add_hackfont(
+			/*FontInfo* hackfont =*/ font_catalog->add_hackfont(
 				fullpath.c_str(), latin_charset(), 
 				get_system_default_hacklatin_fontshifty());
 		}
 	}
+}
+
+std::set<unsigned long>* latin_charset()
+{
+	static std::set<unsigned long> latinset;
+
+	for ( unsigned long i = 0; i < 256; i++ )
+	{
+		latinset.insert(i);
+	}
+
+	return &latinset;
 }
 
 

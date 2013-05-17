@@ -355,18 +355,6 @@ private:
 //////////////////////////////////////////////////////////////////////////
 // font
 
-static std::set<FT_ULong>* latin_charset()
-{
-	static std::set<FT_ULong> latinset;
-
-	for ( FT_ULong i = 0; i < 256; i++ )
-	{
-		latinset.insert(i);
-	}
-
-	return &latinset;
-}
-
 class FontInfo
 {
 public:

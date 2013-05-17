@@ -27,6 +27,8 @@
 
 #include "dfont_config.h"
 
+#include <set>
+
 namespace dfont
 {
 	// get system font directory
@@ -46,6 +48,9 @@ namespace dfont
 
 	// default initializer for dfont
 	extern void dfont_default_initialize();
+
+	// latin charactor set
+	extern std::set<unsigned long>* latin_charset();
 
 	// dump to tga file
 #if _DFONT_DEBUG

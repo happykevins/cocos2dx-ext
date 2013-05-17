@@ -26,6 +26,7 @@
 #define __RENREN_EXT_H__
 
 #include "dfont/dfont_manager.h"
+#include "dfont/dfont_utility.h"
 #include "RichControls/CCHTMLLabel.h"
 
 #endif//__RENREN_EXT_H__

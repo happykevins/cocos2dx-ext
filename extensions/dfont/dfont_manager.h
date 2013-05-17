@@ -25,13 +25,13 @@
 #ifndef __DFONT_MANAGER_H__ 
 #define __DFONT_MANAGER_H__
 
+#include "dfont_config.h"
+
 #include <map>
 #include <set>
 #include <vector>
 #include <string>
 #include <deque>
-
-#include "dfont_render.h"
 
 namespace dfont
 {
@@ -88,7 +88,7 @@ class WTexture2D
 {
 	friend struct GlyphSlot;
 public:
-	WTexture2D(FontInfo* f, int width, int height, int padding_width, int padding_height);
+	WTexture2D(class FontInfo* f, int width, int height, int padding_width, int padding_height);
 	~WTexture2D();
 
 	int width();
@@ -117,10 +117,10 @@ private:
 
 	void _slot_inuse(GlyphSlot* slot);
 
-	void _dump2texture(IBitmap* bitmap, const PaddingRect& rect, bool draw_cbox = false);
+	void _dump2texture(class IBitmap* bitmap, const PaddingRect& rect, bool draw_cbox = false);
 
 
-	FontInfo* m_font;
+	class FontInfo* m_font;
 	GlyphSlot* m_slots;
 	size_t m_slot_num;
 
@@ -145,20 +145,22 @@ public:
 	typedef std::map<GlyphSlot*, utf32> reverse_glyph_map_t;
 
 	void require_text(utf16* text, size_t len, std::vector<GlyphSlot*>* glyph_slots);
-
 	void require_text(utf32* text, size_t len, std::vector<GlyphSlot*>* glyph_slots);
-
 	GlyphSlot* require_char(utf32 charcode);
-
-	FontInfo* font();
-
+	//class FontInfo* font();
 	std::vector<WTexture2D*>* textures();
-
 	void flush();
+
+	// utilities
+	unsigned int char_width();
+	unsigned int char_height();
+
+	bool add_hackfont(const char* fontname, std::set<unsigned long>* charset, unsigned int shift_y = 0);
+	bool add_hackfont(const char* fontname, long face_idx, std::set<unsigned long>* charset, unsigned int shift_y);
 
 	void dump_textures(const char* prefix);
 
-	FontCatalog(FontInfo* f, int texture_width, int texture_height, int max_textures=2);
+	FontCatalog(class FontInfo* f, int texture_width, int texture_height, int max_textures=2);
 
 	~FontCatalog();
 
@@ -167,7 +169,7 @@ private:
 
 	void _remove_from_map(GlyphSlot* slot);
 
-	FontInfo* m_font;
+	class FontInfo* m_font;
 	std::vector<WTexture2D*> m_textures;
 	glyph_map_t m_glyphmap;
 	reverse_glyph_map_t m_reverse_glyphmap;
@@ -204,9 +206,7 @@ public:
 
 private:
 	FontFactory();
-	~FontFactory();
-
-	FT_Library m_library;
+	~FontFactory(); 
 
 	std::map<std::string, FontCatalog*> m_fonts;
 };

@@ -24,6 +24,7 @@
  ****************************************************************************/
 #include "dfont_manager.h"
 #include "dfont_utility.h"
+#include "dfont_render.h"
 
 #include <cocos2d.h>
 
@@ -34,6 +35,7 @@ using namespace cocos2d;
 namespace dfont
 {
 
+static FT_Library s_ft_library = NULL;
 
 void GlyphSlot::retain()
 {
@@ -375,10 +377,10 @@ GlyphSlot* FontCatalog::require_char(utf32 charcode)
 	return slot;
 }
 
-FontInfo* FontCatalog::font()
-{
-	return m_font;
-}
+//FontInfo* FontCatalog::font()
+//{
+//	return m_font;
+//}
 
 std::vector<WTexture2D*>* FontCatalog::textures()
 {
@@ -393,6 +395,26 @@ void FontCatalog::flush()
 	}
 
 	m_previous_char_idx = 0;
+}
+
+unsigned int FontCatalog::char_width()
+{
+	return m_font->char_width_pt();
+}
+
+unsigned int FontCatalog::char_height()
+{
+	return m_font->char_height_pt();
+}
+
+bool FontCatalog::add_hackfont(const char* fontname, std::set<unsigned long>* charset, unsigned int shift_y /*= 0*/)
+{
+	return add_hackfont(fontname, 0, charset, shift_y);
+}
+
+bool FontCatalog::add_hackfont(const char* fontname, long face_idx, std::set<unsigned long>* charset, unsigned int shift_y)
+{
+	return m_font->add_hackfont(fontname, face_idx, charset, shift_y) != NULL;
 }
 
 void FontCatalog::dump_textures(const char* prefix)
@@ -494,7 +516,7 @@ FontCatalog* FontFactory::create_font(
 
 	std::string fullpath = CCFileUtils::sharedFileUtils()->fullPathForFilename(font_name);
 
-	font = FontInfo::create_font(m_library, fullpath.c_str(), faceidx, size_pt, size_pt, ppi);
+	font = FontInfo::create_font(s_ft_library, fullpath.c_str(), faceidx, size_pt, size_pt, ppi);
 	if ( !font )
 	{
 		return find_font(DFONT_DEFAULT_FONTALIAS);
@@ -568,7 +590,7 @@ FontFactory* FontFactory::instance()
 
 FontFactory::FontFactory()
 {
-	FT_Init_FreeType(&m_library);
+	FT_Init_FreeType(&s_ft_library);
 }
 
 FontFactory::~FontFactory()
@@ -584,7 +606,7 @@ FontFactory::~FontFactory()
 		}
 	}
 	m_fonts.clear();
-	FT_Done_FreeType(m_library);
+	FT_Done_FreeType(s_ft_library);
 }
 
 }//namespace dfont
