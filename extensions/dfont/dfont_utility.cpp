@@ -113,7 +113,7 @@ int get_prefered_default_fontsize()
 
 const char* get_system_default_fontfile()
 {
-	return "STHeiti-Light.ttc";
+	return "STHeiti Light.ttc";
 }
 
 const char* get_system_fallback_fontfile()
@@ -169,6 +169,40 @@ int get_system_default_hacklatin_fontshifty()
 }
 
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
+const char* get_systemfont_path()
+{
+	return "/system/fonts";
+}
+
+int get_system_default_ppi()
+{
+	return 0;
+}
+
+int get_prefered_default_fontsize()
+{
+	return 24;
+}
+
+const char* get_system_default_fontfile()
+{
+	return "DroidSansFallback.ttf";
+}
+
+const char* get_system_fallback_fontfile()
+{
+	return "DroidSansFallback.ttf";
+}
+
+const char* get_system_default_hacklatin_fontfile()
+{
+	return NULL;
+}
+
+int get_system_default_hacklatin_fontshifty()
+{
+	return 0;
+}
 
 #elif (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
 const char* get_systemfont_path()
@@ -183,7 +217,7 @@ int get_system_default_ppi()
 
 int get_prefered_default_fontsize()
 {
-	return 18;
+	return 24;
 }
 
 const char* get_system_default_fontfile()

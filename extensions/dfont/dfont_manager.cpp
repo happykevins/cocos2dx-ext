@@ -94,8 +94,8 @@ WTexture2D::WTexture2D(FontInfo* f, int width, int height, int padding_width, in
 	tex->initWithData(m_data, kCCTexture2DPixelFormat_RGBA8888, m_width, m_height, CCSize(m_width, m_height));
 
 	ccTexParams tparam;
-	tparam.magFilter = GL_NEAREST;
-	tparam.minFilter = GL_NEAREST;
+	tparam.magFilter = GL_LINEAR;//GL_NEAREST;
+	tparam.minFilter = GL_LINEAR;
 	tparam.wrapS = GL_CLAMP_TO_EDGE;
 	tparam.wrapT = GL_CLAMP_TO_EDGE;
 	tex->setTexParameters(&tparam);
