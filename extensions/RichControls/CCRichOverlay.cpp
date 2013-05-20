@@ -150,6 +150,9 @@ CCRichOverlay::CCRichOverlay()
 
 CCRichOverlay::~CCRichOverlay()
 { 
+	CCTouchDispatcher* pDispatcher = CCDirector::sharedDirector()->getTouchDispatcher();
+	pDispatcher->removeDelegate(this);
+
 	m_container = NULL;
 	m_touched = NULL;
 	m_elements.clear();

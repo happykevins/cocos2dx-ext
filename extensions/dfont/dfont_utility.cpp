@@ -27,7 +27,7 @@
 #include "dfont_manager.h"
 
 #include <cocos2d.h>
-
+#include <fstream>
 
 #if defined(_MSC_VER)
 
