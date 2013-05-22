@@ -565,6 +565,12 @@ public:
 	virtual void setEnabled(bool b) { m_rEnabled = b;}
 	virtual bool isEnabled() { return m_rEnabled; }
 
+	virtual const std::string& getName() const = 0;
+	virtual const std::string& getValue() const = 0;
+
+	// check location inside
+	virtual bool isLocationInside(CCPoint location);
+
 	// touch events
 	virtual bool onTouchBegan(CCNode* container, CCTouch *touch, CCEvent *evt);
 	virtual void onTouchMoved(CCNode* container, CCTouch *touch, CCEvent *evt);

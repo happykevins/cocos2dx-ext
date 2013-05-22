@@ -373,6 +373,8 @@ public:
 
 	FT_Library library();
 
+	bool is_bitmap();
+
 	FT_UInt char_width_pt();
 
 	FT_UInt char_height_pt();
@@ -425,6 +427,7 @@ private:
 	FT_Library m_library;
 	std::string m_fontname;
 
+	bool	m_isbitmap;
 	FT_UInt m_char_width;
 	FT_UInt m_char_height;
 	FT_UInt	m_ppi;

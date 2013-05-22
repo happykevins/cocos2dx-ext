@@ -97,6 +97,8 @@ public:
 	// flush data to GPU
 	void flush();
 
+	bool has_empty_slot();
+
 	GlyphSlot* cache_charcode(utf32 charcode);
 
 	unsigned char* buffer_data();

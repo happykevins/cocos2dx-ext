@@ -645,6 +645,11 @@ FT_Library FontInfo::library()
 	return m_library;
 }
 
+bool FontInfo::is_bitmap()
+{
+	return m_isbitmap;
+}
+
 FT_UInt FontInfo::char_width_pt()
 {
 	return m_char_width;
@@ -803,6 +808,7 @@ FT_Error FontInfo::init(FT_Library& lib, const char* fontname, FT_Long face_idx,
 			m_face = NULL;
 			return error;
 		}
+		m_isbitmap = true;
 	}
 	else
 	{
@@ -816,6 +822,7 @@ FT_Error FontInfo::init(FT_Library& lib, const char* fontname, FT_Long face_idx,
 		}
 		m_char_width = width_pt;
 		m_char_height = height_pt;
+		m_isbitmap = false;
 	}
 
 	/* use default charmap is better! */
@@ -833,8 +840,9 @@ FT_Error FontInfo::init(FT_Library& lib, const char* fontname, FT_Long face_idx,
 }
 
 FontInfo::FontInfo(FT_Library lib) 
-	: m_library(lib), m_fontname(), m_char_width(0), 
-	m_char_height(0), m_ppi(0), m_shift_y(0), m_extend_pt(0),
+	: m_library(lib), m_fontname(), m_isbitmap(false), 
+	m_char_width(0), m_char_height(0), m_ppi(0), 
+	m_shift_y(0), m_extend_pt(0),
 	m_underline_position(0), m_underline_thickness(0),
 	m_face(NULL), m_has_kerning(false),
 	m_ob_renderer(NULL), m_private_renderer(NULL),

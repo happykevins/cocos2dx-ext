@@ -37,7 +37,6 @@ public:
 	virtual bool init();
 	virtual void append(class IRichElement* ele);
 	virtual void reset();
-	virtual void setContainer(class IRichNode* con);
 
 	// from CCLayer
 	virtual void draw();
@@ -46,12 +45,23 @@ public:
 	virtual void ccTouchEnded(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent);
 	virtual void ccTouchCancelled(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent);
 
+	// register listener
+	virtual void registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler);
+	virtual void registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler);
+
+	virtual void removeClickListener(CCObject* listener);
+	virtual void removeMoveListener(CCObject* listener);
+
 	CCRichOverlay();
 	virtual ~CCRichOverlay();
 
 private:
+	IRichNode* getContainer();
+
 	std::list<class REleHTMLTouchable*> m_elements;
 	std::list<class REleHTMLTouchable*> m_touchables;
+	std::map<CCObject*, SEL_RichEleClickHandler> m_clickseletors;
+	std::map<CCObject*, SEL_RichEleMoveHandler> m_moveseletors;
 	class REleHTMLTouchable* m_touched;
 	class IRichNode* m_container;
 };

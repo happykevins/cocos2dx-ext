@@ -57,6 +57,7 @@ public:
 	virtual IRichAtlas* findAtlas(class CCTexture2D* texture, unsigned int color_rgba);
 	virtual void addOverlay(IRichElement* overlay);
 	virtual void addCCNode(class CCNode* node);
+	class CCRichOverlay* getOverlay();
 
 	// 
 	// CCNode functions

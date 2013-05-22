@@ -1144,8 +1144,8 @@ bool REleHTMLTable::onParseAttributes(class IRichParser* parser, attrs_t* attrs 
 		parseColor((*attrs)["bordercolor"]) : m_rBorderColor;
 
 	// draw border
-	m_rFrame = hasAttribute(attrs, "frame") ?
-		parseFrame((*attrs)["frame"]) : e_box;
+	m_rFrame = hasAttribute(attrs, "frames") ?
+		parseFrame((*attrs)["frames"]) : e_box;
 
 	m_rRules = hasAttribute(attrs, "rules") ?
 		parseRules((*attrs)["rules"]) : e_all;
@@ -1446,12 +1446,8 @@ void REleHTMLImg::onCompositStart(class IRichCompositor* compositor)
 	}
 }
 
-
-// touch events
-bool REleHTMLTouchable::onTouchBegan(CCNode* container, CCTouch *touch, CCEvent *evt)
+bool REleHTMLTouchable::isLocationInside(CCPoint location)
 {
-	bool claimed = false;
-	CCPoint pt = container->convertToNodeSpace(touch->getLocation());
 	RPos ele_pos = getGlobalPosition();
 	ele_pos.sub(getLocalPosition()); // correct the position
 
@@ -1464,36 +1460,34 @@ bool REleHTMLTouchable::onTouchBegan(CCNode* container, CCTouch *touch, CCEvent 
 		rect.origin.setPoint(local_rect.pos.x, local_rect.min_y());
 		rect.size.setSize(local_rect.size.w, local_rect.size.h);
 
-		if ( rect.containsPoint(pt) )
+		if ( rect.containsPoint(location) )
 		{
-			claimed = true;
-			break;
+			return true;
 		}
 	}
 
-
-	if ( claimed )
-	{
-		CCLog("[Rich Touch Began] at: %.0f, %.0f", pt.x, pt.y);
-	}
+	return false;
+}
 
 
-	return claimed;
+// touch events
+bool REleHTMLTouchable::onTouchBegan(CCNode* container, CCTouch *touch, CCEvent *evt)
+{
+	return true;
 }
 void REleHTMLTouchable::onTouchMoved(CCNode* container, CCTouch *touch, CCEvent *evt)
 {
 	CCPoint pt = container->convertToNodeSpace(touch->getLocation());
-	CCLog("[Rich Touch Moved] at: %.0f, %.0f", pt.x, pt.y);
+	
 }
 void REleHTMLTouchable::onTouchEnded(CCNode* container, CCTouch *touch, CCEvent *evt)
 {
 	CCPoint pt = container->convertToNodeSpace(touch->getLocation());
-	CCLog("[Rich Touch Ended] at: %.0f, %.0f", pt.x, pt.y);
 }
 void REleHTMLTouchable::onTouchCancelled(CCNode* container, CCTouch *touch, CCEvent *evt)
 {
 	CCPoint pt = container->convertToNodeSpace(touch->getLocation());
-	CCLog("[Rich Touch Cancelled] at: %.0f, %.0f", pt.x, pt.y);
+	
 }
 
 void REleHTMLTouchable::onCompositStart(class IRichCompositor* compositor)

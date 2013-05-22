@@ -72,6 +72,12 @@ public:
 	// from CCLayer
 	virtual void draw();
 
+	// event handler
+	void registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler);
+	void registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler);
+	void removeClickListener(CCObject* listener);
+	void removeMoveListener(CCObject* listener);
+
 	// utilities
 	CCNODE_UTILITY_SETTER(setPreferredSize,			RSize);
 	CCNODE_UTILITY_SETTER(setPlainMode,				bool);
@@ -90,6 +96,7 @@ public:
 	CCNODE_UTILITY_GETTER(isDefaultNoWrapline,		bool);
 	CCNODE_UTILITY_GETTER(getDefaultSpacing,		short);
 	CCNODE_UTILITY_GETTER(getDefaultPadding,		short);
+
 
 	CCHTMLLabel();
 	virtual ~CCHTMLLabel();

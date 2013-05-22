@@ -93,12 +93,14 @@ WTexture2D::WTexture2D(FontInfo* f, int width, int height, int padding_width, in
 	CCTexture2D* tex = new CCTexture2D;
 	tex->initWithData(m_data, kCCTexture2DPixelFormat_RGBA8888, m_width, m_height, CCSize(m_width, m_height));
 
-	ccTexParams tparam;
-	tparam.magFilter = GL_LINEAR;//GL_NEAREST;
-	tparam.minFilter = GL_LINEAR;
-	tparam.wrapS = GL_CLAMP_TO_EDGE;
-	tparam.wrapT = GL_CLAMP_TO_EDGE;
-	tex->setTexParameters(&tparam);
+	if ( m_font->is_bitmap() )
+	{
+		tex->setAliasTexParameters();
+	}
+	else
+	{
+		tex->setAntiAliasTexParameters();
+	}
 	
 	m_user_texture = tex;
 }
@@ -144,6 +146,11 @@ void WTexture2D::flush()
 	}
 
 	m_dirty_slots.clear();
+}
+
+bool WTexture2D::has_empty_slot()
+{
+	return m_emptyslots.empty() == false;
 }
 
 GlyphSlot* WTexture2D::cache_charcode(utf32 charcode)
@@ -332,6 +339,7 @@ void FontCatalog::require_text(utf32* text, size_t len, std::vector<GlyphSlot*>*
 GlyphSlot* FontCatalog::require_char(utf32 charcode)
 {
 	GlyphSlot* slot = NULL;
+	bool invalid_char = false;
 
 	// find if already created
 	glyph_map_t::iterator it = m_glyphmap.find(charcode);
@@ -347,22 +355,44 @@ GlyphSlot* FontCatalog::require_char(utf32 charcode)
 
 		for ( size_t i = 0; i < m_textures.size(); i++ )
 		{
-			slot = m_textures[i]->cache_charcode(charcode);
-			if ( slot )
+			if ( m_textures[i]->has_empty_slot() )
 			{
+				slot = m_textures[i]->cache_charcode(charcode);
+				if ( !slot )
+				{
+					invalid_char = true;
+				}
 				break;
 			}
 		}
 
-		// no more empty slots, create a new texture
-		if (!slot && (int)m_textures.size() < m_max_textures)
+		if ( !invalid_char && !slot )
 		{
-			WTexture2D* newtex = new WTexture2D(m_font, m_texture_width, m_texture_height, m_padding_width, m_padding_height);
-			m_textures.push_back(newtex);
-			slot = newtex->cache_charcode(charcode);
+			// no more empty slots, create a new texture
+			if (!slot && (int)m_textures.size() < m_max_textures)
+			{
+				WTexture2D* newtex = new WTexture2D(m_font, m_texture_width, m_texture_height, m_padding_width, m_padding_height);
+				m_textures.push_back(newtex);
+				slot = newtex->cache_charcode(charcode);
+
+				if ( !slot )
+				{
+					invalid_char = true;
+				}
+			}
 		}
 
-		if ( slot )
+		// invalid char code
+		if ( invalid_char )
+		{
+			//glyph_map_t::iterator it = m_glyphmap.find(c_char_invalid);
+			//if ( it != m_glyphmap.end() )
+			//{
+			//	slot = it->second;
+			//}
+		}
+		// new char
+		else if ( slot )
 		{
 			_remove_from_map(slot);// remove previous slot map
 			_add_to_map(slot);

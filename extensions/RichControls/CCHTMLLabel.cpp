@@ -25,6 +25,7 @@
 #include "CCHTMLLabel.h"
 #include "CCRichParser.h"
 #include "CCRichCompositor.h"
+#include "CCRichOverlay.h"
 
 NS_CC_EXT_BEGIN;
 
@@ -116,6 +117,26 @@ void CCHTMLLabel::draw()
 	ccDrawColor4B(0xff, 0xff, 0xff, 0xff);
 	ccDrawPoly(vertices, 4, true);
 #endif
+}
+
+void CCHTMLLabel::registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler)
+{
+	m_rRichNode->getOverlay()->registerClickListener(listener, handler);
+}
+
+void CCHTMLLabel::registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler)
+{
+	m_rRichNode->getOverlay()->registerMoveListener(listener, handler);
+}
+
+void CCHTMLLabel::removeClickListener(CCObject* listener)
+{
+	m_rRichNode->getOverlay()->removeClickListener(listener);
+}
+
+void CCHTMLLabel::removeMoveListener(CCObject* listener)
+{
+	m_rRichNode->getOverlay()->removeMoveListener(listener);
 }
 
 CCHTMLLabel::CCHTMLLabel()

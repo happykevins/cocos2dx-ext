@@ -169,44 +169,28 @@ IRichAtlas* CCRichNode::findAtlas(class CCTexture2D* texture, unsigned int color
 
 void CCRichNode::addOverlay(IRichElement* overlay)
 {
-	if ( !m_rOverlays )
-	{
-		m_rOverlays = new CCRichOverlay();// CCRichOverlay::create(); cause crash why?
-		if (m_rOverlays)
-		{
-			//m_rOverlays->setAnchorPoint(ccp(0.f, 1.0f));
-			m_rOverlays->retain();
-			m_rOverlays->init();
-			m_rOverlays->setContainer(this);
-			addChild(m_rOverlays);
-		}
-	}
-
-	if ( m_rOverlays )
-	{
-		m_rOverlays->append(overlay);
-	}
+	getOverlay()->append(overlay);
 }
 
 void CCRichNode::addCCNode(class CCNode* node)
 {
+	getOverlay()->addChild(node);
+}
+
+CCRichOverlay* CCRichNode::getOverlay()
+{
 	if ( !m_rOverlays )
 	{
-		m_rOverlays = new CCRichOverlay();//CCRichOverlay::create();
+		m_rOverlays = CCRichOverlay::create();
 		if (m_rOverlays)
 		{
-			//m_rOverlays->setAnchorPoint(ccp(0.f, 1.0f));
 			m_rOverlays->retain();
-			m_rOverlays->init();
-			m_rOverlays->setContainer(this);
+			m_rOverlays->registerWithTouchDispatcher();
 			addChild(m_rOverlays);
 		}
 	}
 
-	if ( m_rOverlays )
-	{
-		m_rOverlays->addChild(node);
-	}
+	return m_rOverlays;
 }
 
 
@@ -373,6 +357,11 @@ CCRichNode::~CCRichNode()
 {
 	clearAtlasMap();
 	clearRichElements();
+
+	if ( m_rOverlays )
+	{
+		CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(m_rOverlays);
+	}
 
 	CC_SAFE_RELEASE(m_rOverlays);
 	CC_SAFE_DELETE(m_rParser);

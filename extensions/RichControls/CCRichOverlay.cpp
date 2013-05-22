@@ -44,7 +44,6 @@ bool CCRichOverlay::init()
 {
 	CCLayer::init();
 	this->setTouchMode(kCCTouchesOneByOne);
-	this->registerWithTouchDispatcher();
 	return true;
 }
 
@@ -83,14 +82,16 @@ void CCRichOverlay::reset()
 	m_touched = NULL;
 }
 
-void CCRichOverlay::setContainer(IRichNode* con)
+IRichNode* CCRichOverlay::getContainer()
 {
-	m_container = con;
+	CCAssert(getParent(), "");
+	return dynamic_cast<IRichNode*>(getParent());
 }
 
 bool CCRichOverlay::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
 {
-	RRect rect = m_container->getCompositor()->getRect();
+	// check is inside the rich node 
+	RRect rect = getContainer()->getCompositor()->getRect();
 
 	CCRect bbox;
 	bbox.size = CCSize(rect.size.w, rect.size.h);
@@ -107,8 +108,11 @@ bool CCRichOverlay::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
 	{
 		REleHTMLTouchable* overlay = *it;
 
-		if ( overlay->isEnabled() && overlay->onTouchBegan(this, pTouch, pEvent))
+		if ( overlay->isEnabled() && 
+			overlay->isLocationInside(pt)
+			/*overlay->onTouchBegan(this, pTouch, pEvent)*/)
 		{
+			//CCLog("[Rich Touch Began] at: %.0f, %.0f", pt.x, pt.y);
 			m_touched = overlay;
 			return true;
 		}
@@ -119,9 +123,20 @@ bool CCRichOverlay::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
 
 void CCRichOverlay::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
 {
-	if ( m_touched )
+	if ( m_touched && !m_moveseletors.empty() )
 	{
-		m_touched->onTouchMoved(this, pTouch, pEvent);
+		CCPoint pt = convertToNodeSpace(pTouch->getLocation());
+		//CCLog("[Rich Touch Moved] at: %.0f, %.0f", pt.x, pt.y);
+
+		std::map<CCObject*, SEL_RichEleMoveHandler>::iterator it = m_moveseletors.begin();
+		for ( ; it!= m_moveseletors.end(); it++ )
+		{
+			((it->first)->*(it->second))(
+				m_touched, m_touched->getName(), m_touched->getValue(), 
+				pTouch->getLocation(), pTouch->getDelta());
+		}
+
+		//m_touched->onTouchMoved(this, pTouch, pEvent);
 	}	
 }
 
@@ -129,7 +144,21 @@ void CCRichOverlay::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
 {
 	if ( m_touched )
 	{
-		m_touched->onTouchEnded(this, pTouch, pEvent);
+		CCPoint pt = convertToNodeSpace(pTouch->getLocation());
+		//CCLog("[Rich Touch Ended] at: %.0f, %.0f", pt.x, pt.y);
+
+		if ( m_touched->isLocationInside(pt) )
+		{
+			std::map<CCObject*, SEL_RichEleClickHandler>::iterator it = m_clickseletors.begin();
+			for ( ; it!= m_clickseletors.end(); it++ )
+			{
+				((it->first)->*(it->second))(m_touched, m_touched->getName(), m_touched->getValue());
+				//CCLog("[Rich Touch Clicked] name=%s, value=%s", m_touched->getName().c_str(), m_touched->getValue().c_str());
+			}
+			
+		}
+		
+		//m_touched->onTouchEnded(this, pTouch, pEvent);
 		m_touched = NULL;
 	}	
 }
@@ -138,25 +167,52 @@ void CCRichOverlay::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
 {
 	if ( m_touched )
 	{
-		m_touched->onTouchCancelled(this, pTouch, pEvent);
+		CCPoint pt = convertToNodeSpace(pTouch->getLocation());
+		//CCLog("[Rich Touch Cancelled] at: %.0f, %.0f", pt.x, pt.y);
+		//m_touched->onTouchCancelled(this, pTouch, pEvent);
 		m_touched = NULL;
 	}	
 }
 
+void CCRichOverlay::registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler)
+{
+	CCAssert(listener && handler, "");
+	m_clickseletors[listener] = handler;
+}
+
+void CCRichOverlay::registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler)
+{
+	CCAssert(listener && handler, "");
+	m_moveseletors[listener] = handler;
+}
+
+void CCRichOverlay::removeClickListener(CCObject* listener)
+{
+	std::map<CCObject*, SEL_RichEleClickHandler>::iterator it = m_clickseletors.find(listener);
+	if ( it != m_clickseletors.end() )
+	{
+		m_clickseletors.erase(it);
+	}
+}
+
+void CCRichOverlay::removeMoveListener(CCObject* listener)
+{
+	std::map<CCObject*, SEL_RichEleMoveHandler>::iterator it = m_moveseletors.find(listener);
+	if ( it != m_moveseletors.end() )
+	{
+		m_moveseletors.erase(it);
+	}
+}
+
 CCRichOverlay::CCRichOverlay()
-	: m_touched(NULL), m_container(NULL)
+	: m_touched(NULL)
 {
 }
 
 CCRichOverlay::~CCRichOverlay()
 { 
-	CCTouchDispatcher* pDispatcher = CCDirector::sharedDirector()->getTouchDispatcher();
-	pDispatcher->removeDelegate(this);
-
 	m_container = NULL;
 	m_touched = NULL;
-	m_elements.clear();
-	m_touchables.clear();
 }
 
 

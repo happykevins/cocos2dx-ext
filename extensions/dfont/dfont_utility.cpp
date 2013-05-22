@@ -47,8 +47,8 @@ namespace dfont
 
 const char* dfont_default_fontpath = NULL;
 const char* dfont_default_fontfile = NULL;
-int			dfont_default_ppi = 100;
-int			dfont_default_size = 16;
+int			dfont_default_ppi = 96;
+int			dfont_default_size = 18;
 unsigned int dfont_default_color = 0xffffffff;
 
 //
@@ -71,7 +71,7 @@ int get_system_default_ppi()
 
 int get_prefered_default_fontsize()
 {
-	return 16;
+	return 18;
 }
 
 const char* get_system_default_fontfile()
@@ -108,7 +108,7 @@ int get_system_default_ppi()
 
 int get_prefered_default_fontsize()
 {
-	return 16;
+	return 18;
 }
 
 const char* get_system_default_fontfile()
@@ -118,7 +118,7 @@ const char* get_system_default_fontfile()
 
 const char* get_system_fallback_fontfile()
 {
-	return "_H_Helvetica.ttc";
+	return "_H_Helvetica.ttf";
 }
 
 const char* get_system_default_hacklatin_fontfile()
@@ -145,7 +145,7 @@ int get_system_default_ppi()
 
 int get_prefered_default_fontsize()
 {
-	return 16;
+	return 18;
 }
 
 const char* get_system_default_fontfile()
@@ -181,7 +181,7 @@ int get_system_default_ppi()
 
 int get_prefered_default_fontsize()
 {
-	return 24;
+	return 18;
 }
 
 const char* get_system_default_fontfile()
@@ -217,7 +217,7 @@ int get_system_default_ppi()
 
 int get_prefered_default_fontsize()
 {
-	return 24;
+	return 18;
 }
 
 const char* get_system_default_fontfile()
@@ -266,11 +266,7 @@ void dfont_default_initialize()
 		dfont_default_fontfile, 
 		dfont_default_color, 
 		dfont_default_size, 
-		e_border,
-		1.0f,
-		0xFF000000,
-		0,
-		dfont_default_ppi);
+		e_plain);
 
 	// fallback
 	if ( !font_catalog )
@@ -281,11 +277,7 @@ void dfont_default_initialize()
 			dfont_default_fontfile, 
 			dfont_default_color, 
 			dfont_default_size, 
-			e_border,
-			1.0f,
-			0xFF000000,
-			0,
-			dfont_default_ppi);
+			e_plain);
 	}
 	else
 	{

@@ -39,7 +39,6 @@
 //	- TODO: Touchable Element dispatch to script engine
 //	- TODO: 处理中文部分标点不能在行首的情况
 //	- TODO: 处理英文单词折行，处理css inline-style折行的属性
-//	- TODO: 使用一个NODE包装一下，这样y坐标只要递减就可以，不需要每次排版都重新计算所有元素坐标
 //
 
 NS_CC_EXT_BEGIN;
@@ -453,6 +452,16 @@ public:
 	// batch utility
 	virtual IRichAtlas* findAtlas(class CCTexture2D* texture, unsigned int color_rgba) = 0;
 };
+
+// touchable event
+typedef void (CCObject::*SEL_RichEleClickHandler)(
+	class IRichElement* ele, const std::string& name, const std::string& value);
+typedef void (CCObject::*SEL_RichEleMoveHandler)(
+	class IRichElement* ele, const std::string& name, const std::string& value,
+	CCPoint location, CCPoint delta);
+
+#define richclicked_selector(_SELECTOR)	(SEL_RichEleClickHandler)(&_SELECTOR)
+#define richmoved_selector(_SELECTOR)	(SEL_RichEleMoveHandler)(&_SELECTOR)
 
 //@Deprecate
 // transfer parse utilities functions
