@@ -139,6 +139,10 @@ void RSimpleHTMLParser::startElement(void *ctx, const char *name, const char **a
 			element = new REleHTMLCell(dynamic_cast<REleHTMLRow*>(m_rCurrentElement));
 		}
 	}
+	else if ( 0 == strcmp(name, "a") )
+	{
+		element = new REleHTMLAnchor;
+	}
 	else if ( 0 == strcmp(name, "button") )
 	{
 		element = new REleHTMLButton;

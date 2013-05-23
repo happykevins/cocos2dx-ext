@@ -273,6 +273,9 @@ public:
 	
 	virtual void setParent(IRichElement* parent) = 0;
 	virtual IRichElement* getParent() = 0;
+
+	virtual int	getID() = 0;
+	virtual IRichElement* findChildByID(int _id) = 0;
 };
 
 //
@@ -455,9 +458,9 @@ public:
 
 // touchable event
 typedef void (CCObject::*SEL_RichEleClickHandler)(
-	class IRichElement* ele, const std::string& name, const std::string& value);
+	IRichNode* root, IRichElement* ele, int _id);
 typedef void (CCObject::*SEL_RichEleMoveHandler)(
-	class IRichElement* ele, const std::string& name, const std::string& value,
+	IRichNode* root, IRichElement* ele, int _id,
 	CCPoint location, CCPoint delta);
 
 #define richclicked_selector(_SELECTOR)	(SEL_RichEleClickHandler)(&_SELECTOR)

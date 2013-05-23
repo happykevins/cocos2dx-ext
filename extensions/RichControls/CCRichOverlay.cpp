@@ -42,7 +42,7 @@ CCRichOverlay* CCRichOverlay::create()
 
 bool CCRichOverlay::init()
 {
-	CCLayer::init();
+	//CCLayer::init();
 	this->setTouchMode(kCCTouchesOneByOne);
 	return true;
 }
@@ -58,7 +58,7 @@ void CCRichOverlay::draw()
 		ccp(0,0),ccp(s.width,0),
 		ccp(s.width,s.height),ccp(0,s.height),
 	};
-	ccDrawColor4B(0x00, 0x80, 0x80, 0xff);
+	ccDrawColor4B(0x00, 0xff, 0x00, 0xff);
 	ccDrawPoly(vertices, 4, true);
 #endif
 }
@@ -132,7 +132,7 @@ void CCRichOverlay::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
 		for ( ; it!= m_moveseletors.end(); it++ )
 		{
 			((it->first)->*(it->second))(
-				m_touched, m_touched->getName(), m_touched->getValue(), 
+				getContainer(), m_touched, m_touched->getID(), 
 				pTouch->getLocation(), pTouch->getDelta());
 		}
 
@@ -152,7 +152,7 @@ void CCRichOverlay::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
 			std::map<CCObject*, SEL_RichEleClickHandler>::iterator it = m_clickseletors.begin();
 			for ( ; it!= m_clickseletors.end(); it++ )
 			{
-				((it->first)->*(it->second))(m_touched, m_touched->getName(), m_touched->getValue());
+				((it->first)->*(it->second))(getContainer(), m_touched, m_touched->getID());
 				//CCLog("[Rich Touch Clicked] name=%s, value=%s", m_touched->getName().c_str(), m_touched->getValue().c_str());
 			}
 			

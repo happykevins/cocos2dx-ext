@@ -66,6 +66,11 @@ bool REleBase::parse(class IRichParser* parser, const char** attr /*= NULL*/)
 	attrs_t* attrs = parseAttributes(attr);
 	CCAssert(attrs, "");
 
+	if ( hasAttribute(attrs, "id") )
+	{
+		m_rID = atoi( (*attrs)["id"].c_str() );
+	}
+
 	bool success = onParseAttributes(parser, attrs);
 
 	CC_SAFE_DELETE(attrs);
@@ -245,9 +250,39 @@ void REleBase::setParent(IRichElement* parent)
 	m_rParent = parent;
 }
 
+int	REleBase::getID()
+{
+	return m_rID;
+}
+
+IRichElement* REleBase::findChildByID(int _id)
+{
+	if ( m_rID == _id )
+		return this;
+
+	element_list_t* children = getChildren();
+	if ( getChildren() )
+	{
+		for ( element_list_t::iterator it = children->begin(); it != children->end(); it++ )
+		{
+			IRichElement* child = (*it)->findChildByID(_id);
+			if ( child )
+				return child;
+		}
+	}
+
+	return NULL;
+}
+
 REleBase::REleBase()
-	: m_rChildren(NULL), m_rParent(NULL),
-	m_rPos(), m_rGlobalPos(), m_rMetrics(), m_rTexture(), m_rColor(0xffffffff)
+: m_rID(0)
+, m_rChildren(NULL)
+, m_rParent(NULL)
+, m_rPos()
+, m_rGlobalPos()
+, m_rMetrics()
+, m_rTexture()
+, m_rColor(0xffffffff)
 {
 
 }
@@ -515,7 +550,7 @@ bool REleHTMLNode::parseAlignment(const std::string& str, RMetricsState::EAlign&
 	return true;
 }
 
-void REleHTMLNode::processZone(RRect& zone, const ROptSize& width, const ROptSize& height)
+void REleHTMLNode::processZone(RRect& zone, const ROptSize& width, const ROptSize& height, bool auto_size/*=false*/)
 {
 	short target_width = 0;
 	short target_height = 0;
@@ -533,14 +568,30 @@ void REleHTMLNode::processZone(RRect& zone, const ROptSize& width, const ROptSiz
 
 	// size == 0 represent auto grow
 	if ( zone.size.w == 0 )
+	{
 		zone.size.w = target_width;
+	}
+	else if ( auto_size )
+	{
+		zone.size.w = target_width == 0 ? 0 : RMAX(zone.size.w, target_width);
+	}
 	else
-		zone.size.w = RMIN(zone.size.w, target_width);
+	{
+		zone.size.w = target_width > 0 ? target_width : zone.size.w;
+	}
 
 	if ( zone.size.h == 0 )
+	{
 		zone.size.h = target_height;
+	}
+	else if ( auto_size )
+	{
+		zone.size.h = target_height == 0 ? 0 : RMAX(zone.size.h, target_height);
+	}
 	else
-		zone.size.h = RMIN(zone.size.h, target_height);
+	{
+		zone.size.h = target_height > 0 ? target_height : zone.size.h;
+	}
 }
 
 bool REleHTMLP::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
@@ -678,7 +729,7 @@ void REleHTMLSpans::travesalChildrenSpans(
 				end_span_x, min_span_y, max_span_y, color, false);
 		}
 
-		bool process_begin = false;
+		bool process_begin_after_end = false;
 		bool process_end = false;
 		bool process_advance = false;
 		
@@ -694,7 +745,15 @@ void REleHTMLSpans::travesalChildrenSpans(
 			// no underline before
 			if ( font == NULL ) 
 			{
-				process_begin = true;
+				// #issue: only one character cause none span created
+				start_span_x = pos.x + metrics->rect.pos.x;
+				span_y = pos.y;
+				underline_thickness = this_thickness;
+				end_span_x = start_span_x + metrics->rect.size.w;
+				min_span_y = metrics->rect.min_y();
+				max_span_y = metrics->rect.max_y();
+				color = (*it)->getColor();
+				font = this_font;
 			}
 			// advance underline
 			else if ( span_y == pos.y && strcmp(this_font, font) == 0 && this_color == color )
@@ -705,7 +764,7 @@ void REleHTMLSpans::travesalChildrenSpans(
 			else
 			{
 				process_end = true;
-				process_begin = true;
+				process_begin_after_end = true;
 			}
 		}
 		else
@@ -777,7 +836,7 @@ void REleHTMLSpans::travesalChildrenSpans(
 		}
 
 		// process begin
-		if ( process_begin )
+		if ( process_begin_after_end )
 		{
 			start_span_x = pos.x + metrics->rect.pos.x;
 			span_y = pos.y;
@@ -991,7 +1050,38 @@ bool REleHTMLCell::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 		m_rLineCache.setWrapline(false);
 	}
 
+	// color
+	m_rColor = parseColor((*attrs)["bgcolor"]);
+
 	return true;
+}
+
+void REleHTMLCell::onRenderPrev(RRichCanvas canvas)
+{
+	// render background
+	if ( m_rColor )
+	{
+		RRect rect = m_rMetrics.rect;
+		RPos gp = getGlobalPosition();
+		short left = gp.x;
+		short top = gp.y;
+		short right = left + rect.size.w;
+		short bottom = top - rect.size.h - 1;
+
+		CCPoint vertices[4]={
+			ccp(left,bottom),ccp(right,bottom),
+			ccp(right,top),ccp(left,top),
+		};
+
+		ccColor4B bgcolor4b = ccc4(
+			m_rColor & 0xff, 
+			m_rColor >> 8 & 0xff, 
+			m_rColor >> 16 & 0xff,
+			m_rColor >> 24 & 0xff);
+		ccColor4F bgcolor4f = ccc4FFromccc4B(bgcolor4b);
+
+		ccDrawSolidPoly(vertices, 4, bgcolor4f);
+	}
 }
 
 void REleHTMLCell::onCompositStatePushed(class IRichCompositor* compositor)
@@ -999,8 +1089,8 @@ void REleHTMLCell::onCompositStatePushed(class IRichCompositor* compositor)
 	RMetricsState* mstate = compositor->getMetricsState();
 	mstate->elements_cache = &m_rLineCache;
 
+	processZone(mstate->zone, m_rWidth, m_rHeight, false);
 	m_rMetrics.rect.size = mstate->zone.size;
-	processZone(m_rMetrics.rect, m_rWidth, m_rHeight);
 }
 
 void REleHTMLCell::onCompositChildrenEnd(class IRichCompositor* compositor)
@@ -1131,12 +1221,12 @@ bool REleHTMLTable::onParseAttributes(class IRichParser* parser, attrs_t* attrs 
 
 
 	m_rBorder = hasAttribute(attrs, "border") ?
-		parsePixel( (*attrs)["border"] ) : 1;
+		parsePixel( (*attrs)["border"] ) : 0;
 
 	short padding =  hasAttribute(attrs, "cellpadding") ?
-		parsePixel((*attrs)["cellpadding"]) : 1;
+		parsePixel((*attrs)["cellpadding"]) : 0;
 	short spacing = hasAttribute(attrs, "cellspacing") ?
-		parsePixel((*attrs)["cellspacing"]) : 1;
+		parsePixel((*attrs)["cellspacing"]) : 0;
 
 	// color
 	m_rColor = parseColor((*attrs)["bgcolor"]);
@@ -1145,10 +1235,10 @@ bool REleHTMLTable::onParseAttributes(class IRichParser* parser, attrs_t* attrs 
 
 	// draw border
 	m_rFrame = hasAttribute(attrs, "frames") ?
-		parseFrame((*attrs)["frames"]) : e_box;
+		parseFrame((*attrs)["frames"]) : e_void;
 
 	m_rRules = hasAttribute(attrs, "rules") ?
-		parseRules((*attrs)["rules"]) : e_all;
+		parseRules((*attrs)["rules"]) : e_none;
 
 	m_rHAlignSpecified = parseAlignment((*attrs)["align"], m_rHAlign); // not cell alignment!
 
@@ -1186,13 +1276,12 @@ void REleHTMLTable::onCompositStatePushed(class IRichCompositor* compositor)
 	RMetricsState* mstate = compositor->getMetricsState();
 	mstate->elements_cache = &m_rTableCache;
 
-	processZone(mstate->zone, m_rWidth, ROptSize());
+	processZone(mstate->zone, m_rWidth, ROptSize(), true);
 
-	// except border
-	mstate->zone.pos.x += m_rBorder;
-	mstate->zone.pos.y += m_rBorder;
-	mstate->zone.size.w -= m_rBorder * 2;
-	mstate->zone.size.h -= m_rBorder * 2;
+	// except border, spacing, padding
+	size_t cols =  m_rRows.empty() ? 0 : m_rRows[0]->getCells().size();
+	short except_width = (cols - 1) * m_rTableCache.getSpacing() + cols * m_rTableCache.getPadding() * 2 + m_rBorder * 2;
+	mstate->zone.size.w -= except_width;
 
 	mstate->zone.size.w = RMAX(0, mstate->zone.size.w);
 	mstate->zone.size.h = RMAX(0, mstate->zone.size.h);
@@ -1222,7 +1311,7 @@ void REleHTMLTable::drawThicknessLine(short left, short top, short right, short 
 	ccDrawSolidPoly(vertices, 4, color);
 }
 
-void REleHTMLTable::onRenderPost(RRichCanvas canvas) 
+void REleHTMLTable::onRenderPrev(RRichCanvas canvas) 
 {
 	RRect rect = m_rMetrics.rect;
 	RPos gp = getGlobalPosition();
@@ -1529,6 +1618,30 @@ void REleHTMLButton::onTouchEnded(CCNode* container, CCTouch *touch, CCEvent *ev
 	REleHTMLTouchable::onTouchEnded(container, touch, evt);
 	CCLog("[Rich HTML Button Clicked] name=%s, value=%s", m_rName.c_str(), m_rValue.c_str());
 }
+
+
+bool REleHTMLAnchor::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
+{
+	unsigned int color = 0;
+
+	m_rName = (*attrs)["name"];
+	m_rHref = (*attrs)["href"];
+
+	color = REleHTMLNode::parseColor((*attrs)["bgcolor"]);
+
+	setDrawUnderline(true);
+	setDrawBackground(false);
+	if ( color )
+	{
+		setDrawBackground(true);
+		m_rBGColor = color;
+	}
+
+	setEnabled(true);
+
+	return true;
+}
+
 
 static REleCCBNode::ccb_reader_t s_ccb_reader = NULL;
 void REleCCBNode::registerCCBReader(ccb_reader_t reader)

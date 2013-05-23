@@ -41,16 +41,17 @@ NS_CC_EXT_BEGIN;
 // HTML Label can Parse & Display Simple HTML Content Text
 //
 // Standard HTML Tags Supported:
-//	- <p>		: style="white-space:nowrap; color; font; text-align:left|center|right; margin; padding; line-height(no use)"
-//	- <br>		:
-//	- <hr>		: width; size; style="color"
-//	- <font>	: face; color
-//	- <u>		: 
-//	- <table>	: width; align; cellspadding; cellsspacing; border; bgcolor; bordercolor; frame; rules
-//	- <tr>		: align; valign
-//	- <td>		: width; height; align; valign; padding; spacing; nowrap
-//	- <img>		: src; alt(no use); style="textrue-rect:<TOP>px <RIGHT>px <BOTTOM>px <LEFT>px"
-//	- <button>	: name; value; bgcolor
+//	- <p>		: id; style="white-space:nowrap; color; font; text-align:left|center|right; margin; padding; line-height(no use)"
+//	- <br>		: id; 
+//	- <hr>		: id; width; size; style="color"
+//	- <font>	: id; face; color
+//	- <u>		: id; 
+//	- <table>	: id; width; align; cellspadding; cellsspacing; border; bgcolor; bordercolor; frames; rules
+//	- <tr>		: id; align; valign
+//	- <td>		: id; width; height; align; valign; padding; spacing; nowrap; bgcolor
+//	- <img>		: id; src; alt(no use); style="textrue-rect:<TOP>px <RIGHT>px <BOTTOM>px <LEFT>px"
+//	- <a>		: id; name; href; bgcolor
+//	- <button>	: id; name; value; bgcolor
 //
 //	Extension Supported:
 //	- <ccb>		: src; play="auto"; anim;

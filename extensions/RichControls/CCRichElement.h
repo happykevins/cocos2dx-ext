@@ -61,6 +61,9 @@ public:
 	virtual IRichElement* getParent();
 	virtual void setParent(IRichElement* parent);
 
+	virtual int	getID();
+	virtual IRichElement* findChildByID(int _id);
+
 	// metrics properties
 	virtual RPos getLocalPosition() const { return m_rPos; }
 	virtual void setLocalPosition(RPos pos) { m_rPos = pos;}
@@ -115,6 +118,7 @@ protected:
 	// call after render children
 	virtual void onRenderPost(RRichCanvas canvas) {}
 
+	int m_rID;
 
 	element_list_t* m_rChildren;
 	IRichElement* m_rParent;
@@ -204,7 +208,7 @@ public:
 	static short		parsePixel(const std::string& str);
 	static float		parsePercent(const std::string& str);
 	static bool			parseAlignment(const std::string& str, RMetricsState::EAlign& align);
-	static void			processZone(RRect& zone, const ROptSize& width, const ROptSize& height);
+	static void			processZone(RRect& zone, const ROptSize& width, const ROptSize& height, bool auto_size=false);
 };
 
 //
@@ -392,12 +396,15 @@ protected:
 //	- attr: padding=<n>				- text padding
 //	- attr: spacing=<n>				- text spacing
 //	- attr: nowrap=nowrap			- text do not wrap line
+//	- attr: bgcolor=#rrggbb[aa]
 //
 class REleHTMLCell : public REleHTMLNode
 {
 	friend class RHTMLTableCache;
 public:
 	virtual bool pushMetricsState() { return true; }
+	virtual void onRenderPrev(RRichCanvas canvas);
+
 	REleHTMLCell(class REleHTMLRow* row);
 
 protected:
@@ -511,7 +518,7 @@ protected:
 	virtual void onCompositStatePushed(class IRichCompositor* compositor);
 	virtual void onCompositChildrenEnd(class IRichCompositor* compositor);
 	virtual bool onCompositFinish(class IRichCompositor* compositor);
-	virtual void onRenderPost(RRichCanvas canvas);
+	virtual void onRenderPrev(RRichCanvas canvas);
 	virtual void drawThicknessLine(short left, short top, short right, short bottom, const cocos2d::ccColor4F& color);
 
 private:
@@ -609,6 +616,30 @@ protected:
 
 	std::string m_rName;
 	std::string m_rValue;
+};
+
+//
+// HTML Anchor
+//	- as a HTML tag <A>
+//
+//	- attr: name=<name string>		- name
+//	- attr: href=<target string>	- target
+//	- attr: bgcolor=#rrggbb[aa]		- back ground color
+//
+class REleHTMLAnchor : public REleHTMLTouchable
+{
+public:
+	virtual void setName(const std::string& name) { m_rName = name; }
+	virtual const std::string& getName() const { return m_rName; }
+	virtual const std::string& getValue() const { return m_rHref; }
+	virtual void setHerf(const std::string& value) { m_rHref = value; }
+	virtual const std::string& getHref() const { return m_rHref; }
+
+protected:
+	virtual bool onParseAttributes(class IRichParser* parser, attrs_t* attrs );
+
+	std::string m_rName;
+	std::string m_rHref;
 };
 
 //
