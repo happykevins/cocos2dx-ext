@@ -1,5 +1,5 @@
 /****************************************************************************
- Copyright (c) 2013 Kevin Sun and RenRen Games
+ Copyright (c) 2012-2013 Kevin Sun and RenRen Games
 
  email:happykevins@gmail.com
  http://wan.renren.com
@@ -22,14 +22,37 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
-#ifndef __RENREN_EXT_H__ 
-#define __RENREN_EXT_H__
 
-#include "dfont/dfont_manager.h"
-#include "dfont/dfont_utility.h"
+#include "CCell.h"
 
-#include "RichControls/CCHTMLLabel.h"
+#include <sstream>
 
-#include "cells/cells.h"
+namespace cells
+{
 
-#endif//__RENREN_EXT_H__
+CCell::CCell(const std::string& _name, const std::string& _hash /*= NULL*/,
+		estatetype_t _celltype /*= common*/) :
+		m_name(_name), m_hash(_hash), m_cellstate(unknow), m_celltype(_celltype), 
+		m_download_times(0), m_errorno(e_loaderr_ok), m_ziptype(e_zip_none), m_cdf(NULL), 
+		m_watcher(NULL)
+{
+}
+
+CCell::~CCell()
+{
+	if (m_cdf)
+	{
+		delete m_cdf;
+		m_cdf = NULL;
+	}
+}
+
+CCDF::CCDF(const CCell* _cell) :
+		m_hostcell(_cell)
+{
+}
+CCDF::~CCDF()
+{
+}
+
+} /* namespace cells */

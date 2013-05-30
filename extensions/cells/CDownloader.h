@@ -1,5 +1,5 @@
 /****************************************************************************
- Copyright (c) 2013 Kevin Sun and RenRen Games
+ Copyright (c) 2012-2013 Kevin Sun and RenRen Games
 
  email:happykevins@gmail.com
  http://wan.renren.com
@@ -22,14 +22,47 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
-#ifndef __RENREN_EXT_H__ 
-#define __RENREN_EXT_H__
 
-#include "dfont/dfont_manager.h"
-#include "dfont/dfont_utility.h"
+#ifndef CDOWNLOADER_H_
+#define CDOWNLOADER_H_
 
-#include "RichControls/CCHTMLLabel.h"
+#include <cstddef>
+#include <stdio.h>
 
-#include "cells/cells.h"
+namespace cells
+{
 
-#endif//__RENREN_EXT_H__
+class CCell;
+class CCreationWorker;
+struct CProgressWatcher;
+
+typedef void download_handle_t;
+
+class CDownloader
+{
+public:
+	enum edownloaderr_t
+	{
+		e_downloaderr_ok = 0,
+		e_downloaderr_connect,
+		e_downloaderr_timeout,
+		e_downloaderr_notfound,
+		e_downloaderr_other_nobp,
+	};
+public:
+	CDownloader(CCreationWorker* host);
+	~CDownloader();
+
+	edownloaderr_t download(const char* url, FILE* fp, bool bp_resume, size_t bp_range_begin, CProgressWatcher* watcher = NULL);
+
+private:
+	static size_t process_data(void* buffer, size_t size, size_t nmemb, void* context);
+	static int progress(void *ctx, double dlTotal, double dlNow, double upTotal, double upNow);
+
+	CCreationWorker* m_host;
+	download_handle_t* m_handle;
+	FILE* m_stream;
+};
+
+} /* namespace cells */
+#endif /* CDOWNLOADER_H_ */
