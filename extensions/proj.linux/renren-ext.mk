@@ -12,4 +12,13 @@ SOURCES += \
 ../RichControls/CCRichElement.cpp \
 ../RichControls/CCRichNode.cpp \
 ../RichControls/CCRichOverlay.cpp \
-../RichControls/CCRichParser.cpp
+../RichControls/CCRichParser.cpp \
+../cells/CCell.cpp \
+../cells/CCells.cpp \
+../cells/CCreationFactory.cpp \
+../cells/CCreationWorker.cpp \
+../cells/CDownloader.cpp \
+../cells/CUtils.cpp \
+../cells/cells.cpp \
+../cells/md5.c \
+../cells/zpip.c

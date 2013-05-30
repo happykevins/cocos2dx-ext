@@ -46,7 +46,7 @@
 #define USING_COCOS2DX 1
 
 #if USING_COCOS2DX
-#	include <cocos2d.h>
+#	include <platform/CCCommon.h>
 #	define PRINT_LOG cocos2d::CCLog
 #else
 #	define PRINT_LOG printf
