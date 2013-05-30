@@ -45,23 +45,29 @@
 // if using cocos2dx
 #define USING_COCOS2DX 1
 
+#if USING_COCOS2DX
+#	include <cocos2d.h>
+#	define PRINT_LOG cocos2d::CCLog
+#else
+#	define PRINT_LOG printf
+#endif
+
 // log interface
 #ifdef _DUMP_DEBUG
-#define CLogD(format, ...)      printf(format, ##__VA_ARGS__)	// log dump debug
-#define CLogI(format, ...)      printf(format, ##__VA_ARGS__)	// log info
-#define CLogE(format, ...)      printf(format, ##__VA_ARGS__)	// log error
+#define CLogD(format, ...)      PRINT_LOG(format, ##__VA_ARGS__)	// log dump debug
+#define CLogI(format, ...)      PRINT_LOG(format, ##__VA_ARGS__)	// log info
+#define CLogE(format, ...)      PRINT_LOG(format, ##__VA_ARGS__)	// log error
 #define CLog(format, ...)		CLogI(format, ##__VA_ARGS__)	// shortcut for log info
 #elif defined(_DEBUG) || defined(_DUMP_LOG)
 #define CLogD(format, ...)
-#define CLogI(format, ...)      printf(format, ##__VA_ARGS__)
-#define CLogE(format, ...)      printf(format, ##__VA_ARGS__)
+#define CLogI(format, ...)      PRINT_LOG(format, ##__VA_ARGS__)
+#define CLogE(format, ...)      PRINT_LOG(format, ##__VA_ARGS__)
 #define CLog(format, ...)		CLogI(format, ##__VA_ARGS__)
 #else // release
 #define CLogD(format, ...) 
-#define CLogD(format, ...)
-#define CLogI(format, ...)
-#define CLogE(format, ...)      printf(format, ##__VA_ARGS__)
-#define CLog(format, ...)
+#define CLogI(format, ...)		PRINT_LOG(format, ##__VA_ARGS__)
+#define CLogE(format, ...)      PRINT_LOG(format, ##__VA_ARGS__)
+#define CLog(format, ...)		CLogI(format, ##__VA_ARGS__)
 #endif
 
 #if defined(_WIN32)

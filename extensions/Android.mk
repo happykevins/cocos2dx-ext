@@ -81,8 +81,16 @@ spine/spine-cocos2dx.cpp \
 ./RichControls/CCRichElement.cpp \
 ./RichControls/CCRichNode.cpp \
 ./RichControls/CCRichOverlay.cpp \
-./RichControls/CCRichParser.cpp
-
+./RichControls/CCRichParser.cpp \
+./cells/CCell.cpp \
+./cells/CCells.cpp \
+./cells/CCreationFactory.cpp \
+./cells/CCreationWorker.cpp \
+./cells/CDownloader.cpp \
+./cells/CUtils.cpp \
+./cells/cells.cpp \
+./cells/md5.c \
+./cells/zpip.c
 
 LOCAL_WHOLE_STATIC_LIBRARIES := cocos2dx_static
 LOCAL_WHOLE_STATIC_LIBRARIES += cocosdenshion_static
