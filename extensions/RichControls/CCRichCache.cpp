@@ -30,8 +30,8 @@ NS_CC_EXT_BEGIN;
 //////////////////////////////////////////////////////////////////////////
 
 RCacheBase::RCacheBase()
-	: m_rHAlign(RMetricsState::e_left)
-	, m_rVAlign(RMetricsState::e_bottom)
+	: m_rHAlign(e_align_left)
+	, m_rVAlign(e_align_bottom)
 	, m_rLineHeight(0)
 	, m_rSpacing(0)
 	, m_rPadding(0)
@@ -49,6 +49,10 @@ RRect RLineCache::flush(class IRichCompositor* compositor)
 	if ( line->size() == 0 )
 		return line_rect;
 
+	// line mark
+	std::vector<element_list_t::iterator> line_marks;
+	std::vector<short> line_widths;
+
 	RRect zone = compositor->getMetricsState()->zone;
 	bool wrapline = m_rWrapLine;
 
@@ -62,6 +66,7 @@ RRect RLineCache::flush(class IRichCompositor* compositor)
 	RRect temp_linerect;
 	short base_line_pos_y = 0;
 	element_list_t::iterator inner_start_it = line->begin();
+	line_marks.push_back(line->begin()); // push first line start
 	for ( element_list_t::iterator it = line->begin(); it != line->end(); it++ )
 	{
 		RMetrics* metrics = (*it)->getMetrics();
@@ -103,36 +108,22 @@ RRect RLineCache::flush(class IRichCompositor* compositor)
 			// correct out of bound correct
 			short y2correct = -temp_linerect.max_y();
 
-			short padding = getPadding();
-			short x2correct = 0;
-
-			// x correct
-			switch ( getHAlign() )
-			{
-			case RMetricsState::e_left:
-				x2correct = 0 - temp_linerect.min_x() + padding;
-				break;
-			case RMetricsState::e_center:
-				x2correct = ( zone.size.w - temp_linerect.size.w ) / 2;
-				break;
-			case RMetricsState::e_right:
-				x2correct = zone.size.w - temp_linerect.size.w - padding;
-				break;
-			}
-
 			for ( element_list_t::iterator inner_it = inner_start_it; inner_it != next_it; inner_it++ )
 			{
 				RPos pos = (*inner_it)->getLocalPosition();
 				(*inner_it)->setLocalPositionY(pos.y + y2correct);
-				(*inner_it)->setLocalPositionX(pos.x + x2correct);
+				(*inner_it)->setLocalPositionX(pos.x /*+ x2correct*/);
 			}
 
 			temp_linerect.pos.y = pen.y;
-			temp_linerect.pos.x = x2correct;
 			line_rect.extend(temp_linerect);
 
 			pen.y -= (temp_linerect.size.h + getSpacing());
 			pen.x = 0;
+
+			// push next line start
+			line_marks.push_back(next_it);
+			line_widths.push_back(temp_linerect.size.w);
 
 			inner_start_it = next_it;
 			temp_linerect = RRect();
@@ -146,10 +137,37 @@ RRect RLineCache::flush(class IRichCompositor* compositor)
 		(*it)->onCachedCompositEnd(this, pen);
 	}
 
+	short align_correct_x = 0;
+	size_t line_mark_idx = 0;
+	if ( getHAlign() == e_align_left )
+		line_rect.size.w += getPadding() * 2;
+	else
+		line_rect.size.w = RMAX(zone.size.w, line_rect.size.w + getPadding() * 2); // auto rect
 	for ( element_list_t::iterator it = line->begin(); it != line->end(); it++ )
 	{
+		if ( it == line_marks[line_mark_idx] )
+		{
+			short lwidth = line_widths[line_mark_idx];
+
+			// x correct
+			switch ( getHAlign() )
+			{
+			case e_align_left:
+				align_correct_x = getPadding();
+				break;
+			case e_align_center:
+				align_correct_x = ( line_rect.size.w - lwidth ) / 2;
+				break;
+			case e_align_right:
+				align_correct_x = line_rect.size.w - lwidth - getPadding();
+				break;
+			}
+
+			line_mark_idx++; // until next line
+		}
+
 		RPos pos = (*it)->getLocalPosition();
-		(*it)->setLocalPositionX(mstate->pen_x + pos.x);
+		(*it)->setLocalPositionX(mstate->pen_x + pos.x + align_correct_x);
 		(*it)->setLocalPositionY(mstate->pen_y + pos.y);
 	}
 
@@ -334,35 +352,35 @@ void RHTMLTableCache::recompositCell(class REleHTMLCell* cell)
 	short padding = getPadding();
 	short x_fixed = 0;
 	short y_fixed = 0;
-	RMetricsState::EAlign halign = cell->m_rHAlignSpecified ? 
+	EAlignment halign = cell->m_rHAlignSpecified ? 
 		cell->m_rHAlignment : 
 		( cell->m_rRow->m_rHAlignSpecified ? cell->m_rRow->m_rHAlignment : m_rHAlign);
-	RMetricsState::EAlign valign = cell->m_rVAlignSpecified ? 
+	EAlignment valign = cell->m_rVAlignSpecified ? 
 		cell->m_rVAlignment :
 		( cell->m_rRow->m_rVAlignSpecified ? cell->m_rRow->m_rVAlignment : m_rVAlign);
 
 	switch ( halign )
 	{
-	case RMetricsState::e_left:
+	case e_align_left:
 		x_fixed = 0 + padding;
 		break;
-	case RMetricsState::e_center:
+	case e_align_center:
 		x_fixed = ( zone_size.w - content_size.w ) / 2;
 		break;
-	case RMetricsState::e_right:
+	case e_align_right:
 		x_fixed = zone_size.w - content_size.w - padding;
 		break;
 	}
 
 	switch ( valign )
 	{
-	case RMetricsState::e_top:
+	case e_align_top:
 		y_fixed = 0 - padding;
 		break;
-	case RMetricsState::e_middle:
+	case e_align_middle:
 		y_fixed = -( zone_size.h - content_size.h ) / 2;
 		break;
-	case RMetricsState::e_bottom:
+	case e_align_bottom:
 		y_fixed = -(zone_size.h - content_size.h) + padding;
 		break;
 	}

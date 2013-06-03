@@ -74,10 +74,10 @@ public:
 	virtual const char* getDefaultFontAlias();
 	virtual void setDefaultColor(unsigned int color);
 	virtual unsigned int getDefaultColor();
-	virtual void setDefaultAlignment(RMetricsState::EAlign align);
-	virtual RMetricsState::EAlign getDefaultAlignment();
-	virtual bool isDefaultNoWrapline();
-	virtual void setDefaultNoWrapline(bool wrapline);
+	virtual void setDefaultAlignment(EAlignment align);
+	virtual EAlignment getDefaultAlignment();
+	virtual bool isDefaultWrapline();
+	virtual void setDefaultWrapline(bool wrapline);
 	virtual short getDefaultSpacing();
 	virtual void setDefaultSpacing(short spacing);
 	virtual short getDefaultPadding();

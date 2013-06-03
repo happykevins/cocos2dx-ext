@@ -72,10 +72,10 @@ bool CCHTMLLabel::initWithString(const char* rich_string, const CCSize& preferre
 	m_rRichNode->ignoreAnchorPointForPosition(true);
 	m_rRichNode->setAnchorPoint(ccp(.0f, .0f));
 
-	m_rRichNode->setDefaultNoWrapline(true);
+	m_rRichNode->setDefaultWrapline(true);
 	m_rRichNode->setDefaultSpacing(1);
 	m_rRichNode->setDefaultPadding(0);
-	m_rRichNode->setDefaultAlignment(RMetricsState::e_left);
+	m_rRichNode->setDefaultAlignment(e_align_left);
 	m_rRichNode->setDefaultFontAlias(font_alias);
 	m_rRichNode->setPreferredSize(RSize((short)preferred_size.width, (short)preferred_size.height));
 

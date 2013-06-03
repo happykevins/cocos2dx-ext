@@ -89,12 +89,12 @@ unsigned int CCRichNode::getDefaultColor()
 	return getCompositor()->getRenderState()->color;
 }
 
-RMetricsState::EAlign CCRichNode::getDefaultAlignment()
+EAlignment CCRichNode::getDefaultAlignment()
 {
 	return getCompositor()->getRootCache()->getHAlign();
 }
 
-void CCRichNode::setDefaultAlignment(RMetricsState::EAlign align)
+void CCRichNode::setDefaultAlignment(EAlignment align)
 {
 	if ( getCompositor()->getRootCache()->getHAlign() != align )
 	{
@@ -103,12 +103,12 @@ void CCRichNode::setDefaultAlignment(RMetricsState::EAlign align)
 	}
 }
 
-bool CCRichNode::isDefaultNoWrapline()
+bool CCRichNode::isDefaultWrapline()
 {
 	return getCompositor()->getRootCache()->isWrapline();
 }
 
-void CCRichNode::setDefaultNoWrapline(bool wrapline)
+void CCRichNode::setDefaultWrapline(bool wrapline)
 {
 	if ( getCompositor()->getRootCache()->isWrapline() != wrapline )
 	{
@@ -226,7 +226,7 @@ void CCRichNode::updateContentSize()
 	if ( m_rContainer )
 	{
 		RRect rect = getCompositor()->getRect();
-		m_rContainer->setContentSize(CCSize(m_rPreferedSize.w, rect.size.h));
+		m_rContainer->setContentSize(CCSize(/*m_rPreferedSize.w*/rect.size.w, rect.size.h));
 		setPositionY(rect.size.h);
 	}
 }
@@ -326,7 +326,7 @@ void CCRichNode::draw()
 
 	RRichCanvas canvas;
 	canvas.root = this;
-	canvas.rect.size = getCompositor()->getRect().size;
+	canvas.rect/*.size*/ = getCompositor()->getRect()/*.size*/;
 
 	for ( element_list_t::iterator it = m_rElements.begin(); it != m_rElements.end(); it++ )
 	{

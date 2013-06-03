@@ -202,7 +202,7 @@ void REleBase::render(RRichCanvas canvas)
 		ccp(left,bottom),ccp(right,bottom),
 		ccp(right,top),ccp(left,top),
 	};
-	ccDrawColor4B(0xff, 0x80, 0x80, 0xff);
+	ccDrawColor4B(0xff, 0xff, 0x00, 0xff);
 	ccDrawPoly(vertices, 4, true);
 #endif
 }
@@ -513,34 +513,34 @@ float REleHTMLNode::parsePercent(const std::string& str)
 	return ratio;
 }
 
-bool REleHTMLNode::parseAlignment(const std::string& str, RMetricsState::EAlign& align)
+bool REleHTMLNode::parseAlignment(const std::string& str, EAlignment& align)
 {
 	if ( str.empty() )
 		return false;
 
 	if ( strcmp(str.c_str(), "left") == 0 )
 	{
-		align = RMetricsState::e_left;
+		align = e_align_left;
 	}
 	else if ( strcmp(str.c_str(), "right") == 0 )
 	{
-		align = RMetricsState::e_right;
+		align = e_align_right;
 	}
 	else if ( strcmp(str.c_str(), "center") == 0 )
 	{
-		align = RMetricsState::e_center;
+		align = e_align_center;
 	}
 	else if ( strcmp(str.c_str(), "top") == 0 )
 	{
-		align = RMetricsState::e_top;
+		align = e_align_top;
 	}
 	else if ( strcmp(str.c_str(), "bottom") == 0 )
 	{
-		align = RMetricsState::e_bottom;
+		align = e_align_bottom;
 	}
 	else if ( strcmp(str.c_str(), "middle") == 0 )
 	{
-		align = RMetricsState::e_middle;
+		align = e_align_middle;
 	}
 	else
 	{
@@ -605,7 +605,7 @@ bool REleHTMLP::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 		// parse alignment
 		if ( hasAttribute(style_attrs, "text-align") )
 		{
-			RMetricsState::EAlign align = RMetricsState::e_left;
+			EAlignment align = e_align_left;
 			parseAlignment((*style_attrs)["text-align"], align);
 			m_rLineCache.setHAlign(align);
 		}
@@ -1101,10 +1101,10 @@ void REleHTMLCell::onCompositChildrenEnd(class IRichCompositor* compositor)
 
 REleHTMLCell::REleHTMLCell(class REleHTMLRow* row)
 	: m_rRow(row), m_rHAlignSpecified(false), m_rVAlignSpecified(false),
-	m_rHAlignment(RMetricsState::e_left), m_rVAlignment(RMetricsState::e_bottom)
+	m_rHAlignment(e_align_left), m_rVAlignment(e_align_bottom)
 {
 	// content alignment should not effect
-	m_rLineCache.setHAlign(RMetricsState::e_left);
+	m_rLineCache.setHAlign(e_align_left);
 }
 
 bool REleHTMLRow::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
@@ -1135,7 +1135,7 @@ class REleHTMLTable* REleHTMLRow::getTable()
 
 REleHTMLRow::REleHTMLRow(class REleHTMLTable* table)
 	: m_rTable(table), m_rHAlignSpecified(false), m_rVAlignSpecified(false),
-	m_rHAlignment(RMetricsState::e_left), m_rVAlignment(RMetricsState::e_bottom)
+	m_rHAlignment(e_align_left), m_rVAlignment(e_align_bottom)
 {
 
 }
@@ -1468,8 +1468,8 @@ REleHTMLTable::REleHTMLTable()
 , m_rFrame(e_box)
 , m_rRules(e_all)
 , m_rHAlignSpecified(false)
-, m_rHAlign(RMetricsState::e_left)
-, m_rTempAlign(RMetricsState::e_left)
+, m_rHAlign(e_align_left)
+, m_rTempAlign(e_align_left)
 {
 	m_rTableCache.setTable(this);
 }

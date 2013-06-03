@@ -160,7 +160,7 @@ void CCRichAtlas::draw()
 		ccp(0,0),ccp(s.width,0),
 		ccp(s.width,s.height),ccp(0,s.height),
 	};
-	ccDrawColor4B(0xff, 0x00, 0x00, 0xff);
+	ccDrawColor4B(0x00, 0xff, 0x00, 0xff);
 	ccDrawPoly(vertices, 4, true);
 #endif
 }

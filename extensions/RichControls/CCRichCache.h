@@ -33,10 +33,10 @@ class RCacheBase : public ICompositCache
 {
 public:
 	// alignments properties
-	virtual RMetricsState::EAlign getHAlign() { return m_rHAlign; }
-	virtual RMetricsState::EAlign getVAlign() { return m_rVAlign; }
-	virtual void setHAlign(RMetricsState::EAlign align) { m_rHAlign = align; }
-	virtual void setVAlign(RMetricsState::EAlign align) { m_rVAlign = align; }
+	virtual EAlignment getHAlign() { return m_rHAlign; }
+	virtual EAlignment getVAlign() { return m_rVAlign; }
+	virtual void setHAlign(EAlignment align) { m_rHAlign = align; }
+	virtual void setVAlign(EAlignment align) { m_rVAlign = align; }
 	
 	// line height
 	virtual short getLineHeight() { return m_rLineHeight; }
@@ -55,8 +55,8 @@ public:
 	RCacheBase();
 
 protected:
-	RMetricsState::EAlign m_rHAlign;
-	RMetricsState::EAlign m_rVAlign;
+	EAlignment m_rHAlign;
+	EAlignment m_rVAlign;
 	short m_rLineHeight;
 	short m_rSpacing;
 	short m_rPadding;

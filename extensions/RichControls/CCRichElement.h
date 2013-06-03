@@ -207,23 +207,8 @@ public:
 	static ROptSize		parseOptSize(const std::string& str);
 	static short		parsePixel(const std::string& str);
 	static float		parsePercent(const std::string& str);
-	static bool			parseAlignment(const std::string& str, RMetricsState::EAlign& align);
+	static bool			parseAlignment(const std::string& str, EAlignment& align);
 	static void			processZone(RRect& zone, const ROptSize& width, const ROptSize& height, bool auto_size=false);
-};
-
-//
-// Root Element
-//
-class REleHTMLRoot : public REleHTMLNode
-{
-public:
-	virtual bool pushMetricsState() { return true; }
-	virtual bool isCachedComposit() { return true; }
-	virtual bool isNewlineBefore() { return true; }
-	virtual bool isNewlineFollow() { return true; }
-
-protected:
-	virtual bool onCompositFinish(class IRichCompositor* compositor) { return true; }
 };
 
 //
@@ -257,6 +242,21 @@ protected:
 private:
 	RLineCache m_rLineCache;
 	std::string m_rFontAlias;
+};
+
+//
+// Root Element
+//
+class REleHTMLRoot : public REleHTMLP
+{
+//public:
+//	virtual bool pushMetricsState() { return true; }
+//	virtual bool isCachedComposit() { return true; }
+//	virtual bool isNewlineBefore() { return true; }
+//	virtual bool isNewlineFollow() { return true; }
+//
+//protected:
+//	virtual bool onCompositFinish(class IRichCompositor* compositor) { return true; }
 };
 
 //
@@ -418,8 +418,8 @@ private:
 
 	bool m_rHAlignSpecified;
 	bool m_rVAlignSpecified;
-	RMetricsState::EAlign m_rHAlignment;
-	RMetricsState::EAlign m_rVAlignment;
+	EAlignment m_rHAlignment;
+	EAlignment m_rVAlignment;
 	ROptSize m_rWidth;
 	ROptSize m_rHeight;
 	RRect m_rContentSize;
@@ -456,8 +456,8 @@ private:
 
 	bool m_rHAlignSpecified;
 	bool m_rVAlignSpecified;
-	RMetricsState::EAlign m_rHAlignment;
-	RMetricsState::EAlign m_rVAlignment;
+	EAlignment m_rHAlignment;
+	EAlignment m_rVAlignment;
 };
 
 
@@ -535,8 +535,8 @@ private:
 	ERules m_rRules;
 
 	bool m_rHAlignSpecified;
-	RMetricsState::EAlign m_rHAlign;
-	RMetricsState::EAlign m_rTempAlign;
+	EAlignment m_rHAlign;
+	EAlignment m_rTempAlign;
 };
 
 //

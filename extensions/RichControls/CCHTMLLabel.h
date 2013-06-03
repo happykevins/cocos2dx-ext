@@ -54,7 +54,7 @@ NS_CC_EXT_BEGIN;
 //	- <button>	: id; name; value; bgcolor
 //
 //	Extension Supported:
-//	- <ccb>		: src; play="auto"; anim;
+//	- <ccb>		: id; src; play="auto"; anim;
 //
 class CCHTMLLabel : public CCNode, public CCLabelProtocol
 {
@@ -84,8 +84,8 @@ public:
 	CCNODE_UTILITY_SETTER(setPlainMode,				bool);
 	CCNODE_UTILITY_SETTER(setDefaultFontAlias,		const char*);
 	CCNODE_UTILITY_SETTER(setDefaultColor,			unsigned int);
-	CCNODE_UTILITY_SETTER(setDefaultAlignment,		RMetricsState::EAlign);
-	CCNODE_UTILITY_SETTER(setDefaultNoWrapline,		bool);
+	CCNODE_UTILITY_SETTER(setDefaultAlignment,		EAlignment);
+	CCNODE_UTILITY_SETTER(setDefaultWrapline,		bool);
 	CCNODE_UTILITY_SETTER(setDefaultSpacing,		short);
 	CCNODE_UTILITY_SETTER(setDefaultPadding,		short);
 
@@ -93,8 +93,8 @@ public:
 	CCNODE_UTILITY_GETTER(isPlainMode,				bool);
 	CCNODE_UTILITY_GETTER(getDefaultFontAlias,		const char*);
 	CCNODE_UTILITY_GETTER(getDefaultColor,			unsigned int);
-	CCNODE_UTILITY_GETTER(getDefaultAlignment,		RMetricsState::EAlign);
-	CCNODE_UTILITY_GETTER(isDefaultNoWrapline,		bool);
+	CCNODE_UTILITY_GETTER(getDefaultAlignment,		EAlignment);
+	CCNODE_UTILITY_GETTER(isDefaultWrapline,		bool);
 	CCNODE_UTILITY_GETTER(getDefaultSpacing,		short);
 	CCNODE_UTILITY_GETTER(getDefaultPadding,		short);
 

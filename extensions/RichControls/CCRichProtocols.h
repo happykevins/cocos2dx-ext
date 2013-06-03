@@ -33,12 +33,9 @@
 
 //
 //	Rich Controls
-//	- TODO: CCRichArea, CCRichScrollView...
-//	- TODO: support CCLabelTTF, CCLabelAtlas, CCLabelBMF
-//	- TODO: support CCSprite CCAnimation
+//	- TODO: support CCNode CCSprite CCAnimation
 //	- TODO: Touchable Element dispatch to script engine
-//	- TODO: 处理中文部分标点不能在行首的情况
-//	- TODO: 处理英文单词折行，处理css inline-style折行的属性
+//	- TODO: word wrap, using css inline-style
 //
 
 NS_CC_EXT_BEGIN;
@@ -106,17 +103,15 @@ struct RRect
 	}
 	inline void extend(const RRect& other)
 	{
-		pos.x = RMIN(pos.x, other.pos.x);
-		pos.y = RMAX(pos.y, other.pos.y);
+		short mix = RMIN( min_x(), other.min_x() );
+		short max = RMAX( max_x(), other.max_x() );
+		short miy = RMIN( min_y(), other.min_y() );
+		short may = RMAX( max_y(), other.max_y() );
 
-		short tmp_max_x = RMAX( max_x(), other.max_x() );
-		short tmp_min_y = RMIN( min_y(), other.min_y() );
-		
-		size.w = tmp_max_x - pos.x;
-		size.h = -(tmp_min_y - pos.y);
-
-		size.w = RMAX(size.w, 0);
-		size.h = RMAX(size.h, 0);
+		pos.x = mix;
+		pos.y = may;
+		size.w = max - mix;
+		size.h = may - miy;
 	}
 	inline void subtract(const RRect& other)
 	{
@@ -207,6 +202,24 @@ struct RRichCanvas
 typedef std::vector<class IRichElement*> element_list_t;
 
 //
+// Alignment
+// 
+enum EAlignment
+{
+	// Horizon
+	e_align_left = 0,
+	e_align_right = 1,
+	e_align_center = 2,
+	e_align_justify,	// not supported!
+	e_align_char,		// not supported!
+	// Vertical
+	e_align_bottom = 0,
+	e_align_top = 1,
+	e_align_middle = 2,
+	e_align_baseline // not supported
+};
+
+//
 // Rich-Element protocol
 //	- represent a single unit for compositor
 //
@@ -264,6 +277,7 @@ public:
 	virtual void onCachedCompositBegin(class ICompositCache* cache, RPos& pen) = 0;
 	virtual void onCachedCompositEnd(class ICompositCache* cache, RPos& pen) = 0;
 
+
 	/**
 	 * children & parent access
 	 */
@@ -305,24 +319,6 @@ public:
 //
 struct RMetricsState
 {
-	//
-	// Alignment
-	// 
-	enum EAlign
-	{
-		// Horizon
-		e_left = 0,
-		e_right = 1,
-		e_center = 2,
-		e_justify,	// not supported!
-		e_char,		// not supported!
-		// Vertical
-		e_bottom = 0,
-		e_top = 1,
-		e_middle = 2,
-		e_baseline // not supported
-	};
-
 	RRect zone;	// current composit zone
 
 	short pen_x;
@@ -404,10 +400,10 @@ public:
 	//virtual element_list_t* getCachedElements() = 0;
 	virtual void clear() = 0;
 
-	virtual RMetricsState::EAlign getHAlign() = 0;
-	virtual RMetricsState::EAlign getVAlign() = 0;
-	virtual void setHAlign(RMetricsState::EAlign align) = 0;
-	virtual void setVAlign(RMetricsState::EAlign align) = 0;
+	virtual EAlignment getHAlign() = 0;
+	virtual EAlignment getVAlign() = 0;
+	virtual void setHAlign(EAlignment align) = 0;
+	virtual void setVAlign(EAlignment align) = 0;
 	virtual void setWrapline(bool wrap) = 0;
 	virtual bool isWrapline() = 0;
 	virtual short getSpacing() = 0;
