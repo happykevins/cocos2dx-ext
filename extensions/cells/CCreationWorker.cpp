@@ -129,7 +129,7 @@ void CCreationWorker::do_work()
 
 	// make local url
 	std::stringstream ss;
-	ss << m_host->m_host->regulation().local_url << cell->m_name;
+	ss << get_local_path() << cell->m_name;
 	std::string localurl = ss.str();
 	ss << m_host->m_host->regulation().tempfile_suffix;
 	std::string localtmpurl = ss.str();
@@ -341,6 +341,11 @@ size_t CCreationWorker::get_downloadbytes()
 	return m_downloadbytes;
 }
 
+const char* CCreationWorker::get_local_path()
+{
+	return m_host->m_host->regulation().local_url.c_str();
+}
+
 size_t CCreationWorker::calc_maxspeed()
 {
 	return m_host->suggest_maxspeed();
@@ -521,7 +526,7 @@ bool CCreationWorker::work_decompress(const char* tmplocalurl, const char* local
 class CDFParser: public CCSAXDelegator
 {
 public:
-	CCDF* parse(CCell* cell, const char* localpath)
+	CCDF* parse(CCreationWorker* worker, CCell* cell, const char* localpath)
 	{
 		CCSAXParser parser;
 		if ( !parser.init("UTF-8") )
@@ -532,6 +537,7 @@ public:
 		parser.setDelegator(this);
 
 		m_cdf = new CCDF(cell);
+		m_worker = worker;
 
 		if ( parser.parse(localpath) )
 			return m_cdf;
@@ -640,6 +646,21 @@ public:
 
 			// add cell to cdf
 			m_cdf->m_subcells.push_back(cell);
+
+			// verify sub-cell
+			if ( cell->m_celltype == e_state_file_common )
+			{
+				std::string localpath = m_worker->get_local_path() + cell->m_name;
+				FILE* subfp = fopen(localpath.c_str(), "rb");
+				if ( subfp )
+				{
+					if ( m_worker->work_verify_local(cell, subfp) )
+					{
+						cell->m_cellstate = CCell::verified;
+					}
+					fclose(subfp);
+				}
+			}
 		}
 		else if ( strcmp(name, "cells") == 0 && *atts )
 		{
@@ -655,12 +676,13 @@ public:
 	virtual void textHandler(void *ctx, const char *s, int len) {}
 
 	CDFParser() 
-		: m_cdf(NULL) 
+		: m_cdf(NULL), m_worker(NULL)
 	{
 	}
 
 private:
 	CCDF* m_cdf;
+	CCreationWorker* m_worker;
 
 };//CellParser
 #endif//#if USING_COCOS2DX
@@ -673,7 +695,7 @@ bool CCreationWorker::work_patchup_cell(CCell* cell, const char* localurl)
 	// cocos2dx implement
 	CDFParser parser;
 	if ( cell->m_celltype == e_state_file_cdf
-		&& (cell->m_cdf = parser.parse(cell, localurl)) )
+		&& (cell->m_cdf = parser.parse(this, cell, localurl)) )
 	{
 		cdf_result = true;
 	}
@@ -761,23 +783,42 @@ bool CCreationWorker::work_patchup_cell(CCell* cell, const char* localurl)
 						cell_hash = "";
 					}
 				}
+				
+				{ // setup sub-cell begin
 
-				CCell* cell = new CCell(cell_name_tmp, cell_hash, cell_type);
-				if (cell_zhash) cell->m_zhash = cell_zhash;
-				cell->m_ziptype = cell_ziptype;
+					CCell* cell = new CCell(cell_name_tmp, cell_hash, cell_type);
+					if (cell_zhash) cell->m_zhash = cell_zhash;
+					cell->m_ziptype = cell_ziptype;
 
-				for (const XMLAttribute* cell_attr =
-					cell_section->FirstAttribute(); cell_attr; cell_attr =
-					cell_attr->Next())
-				{
-					//CLogD("%s=%s\n", cell_attr->Name(), cell_attr->Value());
-					cell->m_props.insert(
-						std::make_pair(cell_attr->Name(),
-						cell_attr->Value()));
-				}
+					for (const XMLAttribute* cell_attr =
+						cell_section->FirstAttribute(); cell_attr; cell_attr =
+						cell_attr->Next())
+					{
+						//CLogD("%s=%s\n", cell_attr->Name(), cell_attr->Value());
+						cell->m_props.insert(
+							std::make_pair(cell_attr->Name(),
+							cell_attr->Value()));
+					}
 
-				name_set.insert(cell_name);
-				ret_cdf->m_subcells.push_back(cell);
+					name_set.insert(cell_name);
+					ret_cdf->m_subcells.push_back(cell);
+
+					// verify sub-cell
+					if ( cell->m_celltype == e_state_file_common )
+					{
+						std::string localpath = get_local_path() + cell->m_name;
+						FILE* subfp = fopen(localpath.c_str(), "rb");
+						if ( subfp )
+						{
+							if ( this->work_verify_local(cell, subfp) )
+							{
+								cell->m_cellstate = CCell::verified;
+							}
+							fclose(subfp);
+						}
+					}
+
+				} // setup sub-cell end
 			}
 		}
 		cdf_result = true;

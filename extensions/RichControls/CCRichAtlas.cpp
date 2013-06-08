@@ -103,15 +103,27 @@ void CCRichAtlas::updateAtlasValues()
 			IRichElement* ele = *it;
 			RTexture* rtex = ele->getTexture();
 
-			float left   = rtex->rect.pos.x/textureWide;
-			float right  = (rtex->rect.pos.x + rtex->rect.size.w)/textureWide;
-			float top    = rtex->rect.pos.y/textureHigh;
-			float bottom = (rtex->rect.pos.y + rtex->rect.size.h)/textureHigh;
+#if CC_FIX_ARTIFACTS_BY_STRECHING_TEXEL
+			float left   = (rtex->rect.pos.x - 0.5f)/textureWide;
+			float right  = left + (rtex->rect.size.w + 1.0f)/textureWide;
+			float top    = (rtex->rect.pos.y - 0.5f)/textureHigh;
+			float bottom = top + (rtex->rect.size.h + 1.0f)/textureHigh;
 
 			float ele_pos_left = ele->getGlobalPosition().x;
-			float ele_pos_top = ele->getGlobalPosition().y;// + m_container->getActualSize().h;
+			float ele_pos_top = ele->getGlobalPosition().y;
+			float ele_width = rtex->rect.size.w + 1.0f;
+			float ele_height = rtex->rect.size.h + 1.0f;
+#else
+			float left   = rtex->rect.pos.x/textureWide;
+			float right  = left + rtex->rect.size.w/textureWide;
+			float top    = rtex->rect.pos.y/textureHigh;
+			float bottom = top + rtex->rect.size.h/textureHigh;
+
+			float ele_pos_left = ele->getGlobalPosition().x;
+			float ele_pos_top = ele->getGlobalPosition().y;
 			float ele_width = rtex->rect.size.w;
 			float ele_height = rtex->rect.size.h;
+#endif // ! CC_FIX_ARTIFACTS_BY_STRECHING_TEXEL
 
 			quad.tl.texCoords.u = left;
 			quad.tl.texCoords.v = top;

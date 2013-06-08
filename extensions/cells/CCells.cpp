@@ -34,7 +34,7 @@
 namespace cells
 {
 
-const double CELLS_WORKING_LOAD = 0.05f;
+const double CELLS_WORKING_LOAD = 0.03f;
 
 static pthread_t s_thread;
 static volatile bool s_running = false;
@@ -191,7 +191,7 @@ void CCells::tick_dispatch(double dt)
 		size_t tb = m_factory->count_downloadbytes();
 		size_t wl = m_factory->count_workload();
 		size_t sp = size_t( (tb - last_bytes) / dump_dt ); 
-		CLog("STAT: WL=%d, KB/s=%d, TB=%d\n", wl, sp / 1024, tb);
+		CLogD("STAT: WL=%d, KB/s=%d, TB=%d\n", wl, sp / 1024, tb);
 		dump_dt = 0;
 		last_bytes = tb;
 	}
@@ -353,7 +353,7 @@ CCell* CCells::post_desired(const std::string& _name, estatetype_t type, int pri
 			m_cellidx.unlock();
 			return NULL;
 		}
-		else if ( cell->m_ziptype != zip_type )
+		else if ( zip_type != e_zip_cdfconfig && cell->m_ziptype != zip_type )
 		{
 			CLogE("post failed: name=%s; o_ziptype=%d; r_ziptype=%d; ziptype mismatch!\n", name.c_str(), cell->m_ziptype, zip_type);
 
@@ -478,13 +478,21 @@ void CCells::on_task_finish(CCell* cell)
 		{
 			if ( cell->m_cdf )
 			{
-				props_list_t props_list;
+				props_list_t ready_props_list;
+				props_list_t pending_prop_list;
 
-				props_list.insert(std::make_pair(cell->m_name, &(cell->m_props)));
+				ready_props_list.insert(std::make_pair(cell->m_name, &(cell->m_props)));
 
 				for ( celllist_t::iterator sub_it = cell->m_cdf->m_subcells.begin(); sub_it != cell->m_cdf->m_subcells.end(); sub_it++ )
 				{
-					props_list.insert(std::make_pair((*sub_it)->m_name, &((*sub_it)->m_props)));
+					if ( (*sub_it)->m_cellstate == CCell::verified || (*sub_it)->m_celltype == e_state_file_pkg )
+					{
+						ready_props_list.insert(std::make_pair((*sub_it)->m_name, &((*sub_it)->m_props)));
+					}
+					else
+					{
+						pending_prop_list.insert(std::make_pair((*sub_it)->m_name, &((*sub_it)->m_props)));
+					}
 				}
 
 				notify_observers(
@@ -492,7 +500,8 @@ void CCells::on_task_finish(CCell* cell)
 					cell->m_name,
 					cell->m_errorno,
 					&(cell->m_cdf->m_props),
-					&props_list,
+					&ready_props_list,
+					&pending_prop_list,
 					task->context());
 			}
 			else
@@ -501,6 +510,7 @@ void CCells::on_task_finish(CCell* cell)
 					cell->m_celltype,
 					cell->m_name,
 					cell->m_errorno,
+					NULL,
 					NULL,
 					NULL,
 					task->context());
@@ -513,6 +523,7 @@ void CCells::on_task_finish(CCell* cell)
 				cell->m_name,
 				cell->m_errorno,
 				&(cell->m_props),
+				NULL,
 				NULL,
 				task->context());
 		}
@@ -544,7 +555,7 @@ void CCells::on_task_finish(CCell* cell)
 
 		if ( all_task_done )
 		{
-			notify_observers(e_state_event_alldone, std::string(""), e_loaderr_ok, NULL, NULL, NULL);
+			notify_observers(e_state_event_alldone, std::string(""), e_loaderr_ok, NULL, NULL, NULL, NULL);
 		}
 	}
 
@@ -552,7 +563,10 @@ void CCells::on_task_finish(CCell* cell)
 	cell->m_watcher = NULL;
 }
 
-void CCells::notify_observers(estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* sub_props, void* context)
+void CCells::notify_observers(
+	estatetype_t type, const std::string& name, eloaderror_t error_no, 
+	const props_t* props, const props_list_t* ready_props, const props_list_t* pending_props,
+	void* context)
 {
 	m_observers.lock();
 	for (observeridx_t::iterator it = m_observers.begin();
@@ -563,7 +577,8 @@ void CCells::notify_observers(estatetype_t type, const std::string& name, eloade
 			name,
 			error_no,
 			props,
-			sub_props,
+			ready_props,
+			pending_props,
 			context);
 	}
 	m_observers.unlock();
@@ -732,7 +747,7 @@ void CCells::cdf_postload(CCellTask* task)
 			// common file
 			//
 
-			if ( postload )
+			if ( postload && subcell->m_cellstate != CCell::verified )
 			{
 				//post_desire_file(subcell->m_name, task->priority(), subcell->m_ziptype, task->context());
 				post_desired(subcell->m_name, e_state_file_common, task->priority(), task->context(), NULL, subcell->m_ziptype);

@@ -74,7 +74,7 @@ void CCreationFactory::post_work(CCell* cell, bool ghost)
 			(int)cell->m_download_times);
 
 	//
-	// 这里要确保同一时刻只有一个cell被加载
+	// 这里要确保同一时刻只有一个相同cell被加载
 	//
 
 	// loading中，不需要投递，等待完成后dispatch即可
@@ -92,6 +92,7 @@ void CCreationFactory::post_work(CCell* cell, bool ghost)
 	}
 
 	// 只在此线程中修改cell状态
+	// #issue: 顺序性能否保证？
 	cell->m_cellstate = CCell::loading;
 
 	// check if ghost task

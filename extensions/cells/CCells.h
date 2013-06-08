@@ -159,7 +159,10 @@ private:
 	void cdf_setupindex(CCell* cell);
 	void cdf_postload(CCellTask* task);
 	void ghost_working();
-	void notify_observers(estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* sub_props, void* context);
+	void notify_observers(
+		estatetype_t type, const std::string& name, eloaderror_t error_no, 
+		const props_t* props, const props_list_t* ready_props, const props_list_t* pending_props,
+		void* context);
 
 protected:
 	CRegulation 		m_rule;

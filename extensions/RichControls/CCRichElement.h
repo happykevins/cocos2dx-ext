@@ -247,16 +247,16 @@ private:
 //
 // Root Element
 //
-class REleHTMLRoot : public REleHTMLP
+class REleHTMLRoot : public REleHTMLNode
 {
-//public:
-//	virtual bool pushMetricsState() { return true; }
-//	virtual bool isCachedComposit() { return true; }
-//	virtual bool isNewlineBefore() { return true; }
-//	virtual bool isNewlineFollow() { return true; }
-//
-//protected:
-//	virtual bool onCompositFinish(class IRichCompositor* compositor) { return true; }
+public:
+	virtual bool pushMetricsState() { return true; }
+	virtual bool isCachedComposit() { return true; }
+	virtual bool isNewlineBefore() { return true; }
+	virtual bool isNewlineFollow() { return true; }
+
+protected:
+	virtual bool onCompositFinish(class IRichCompositor* compositor) { return true; }
 };
 
 //

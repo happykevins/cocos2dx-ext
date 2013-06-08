@@ -139,20 +139,23 @@ struct CRegulation
 class CFunctorBase
 {
 public:
-	virtual void operator() (estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* sub_props, void* context) = 0;
+	virtual void operator() (
+		estatetype_t type, const std::string& name, eloaderror_t error_no, 
+		const props_t* props, const props_list_t* ready_props, const props_list_t* pending_props,
+		void* context) = 0;
 };
 
 class CFunctorG : public CFunctorBase
 {
 public:
-	typedef void (*cb_func_g_t)(estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* sub_props, void* context);
+	typedef void (*cb_func_g_t)(estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* ready_props, const props_list_t* pending_props, void* context);
 	CFunctorG(cb_func_g_t cb_func) : m_cb_func(cb_func) {}
 	CFunctorG(const CFunctorG& other) : m_cb_func(other.m_cb_func) {}
 	CFunctorG() : m_cb_func(NULL) {}
 	virtual ~CFunctorG(){ m_cb_func = NULL; }
-	virtual void operator() (estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* sub_props, void* context)
+	virtual void operator() (estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* ready_props, const props_list_t* pending_props, void* context)
 	{
-		m_cb_func(type, name, error_no, props, sub_props, context);
+		m_cb_func(type, name, error_no, props, ready_props, pending_props, context);
 	}
 
 protected:
@@ -163,7 +166,7 @@ template<typename T>
 class CFunctorM : public CFunctorBase
 {
 public:
-	typedef void (T::*mfunc_t)(estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* sub_props, void* context);
+	typedef void (T::*mfunc_t)(estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* ready_props, const props_list_t* pending_props, void* context);
 	CFunctorM(T* _t, mfunc_t _f) : m_target(_t), m_func(_f) {}
 	CFunctorM(const CFunctorM<T>& other) : m_target(other.m_target), m_func(other.m_func) {}
 	void operator=(const CFunctorM<T>& other)
@@ -172,9 +175,9 @@ public:
 		m_func = other.m_func;
 	}
 
-	void operator() (estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* sub_props, void* context)
+	void operator() (estatetype_t type, const std::string& name, eloaderror_t error_no, const props_t* props, const props_list_t* ready_props, const props_list_t* pending_props, void* context)
 	{
-		(m_target->*m_func)(type, name, error_no, props, sub_props, context);
+		(m_target->*m_func)(type, name, error_no, props, ready_props, pending_props, context);
 	}
 
 protected:

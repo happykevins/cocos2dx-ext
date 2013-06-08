@@ -54,6 +54,7 @@ public:
 	virtual void do_work();
 	virtual size_t workload();		// 负载情况
 	size_t get_downloadbytes();
+	virtual const char* get_local_path();
 
 protected:
 	virtual bool work_verify_local(CCell* cell, FILE* fp);
@@ -89,6 +90,7 @@ private:
 	size_t m_cachedbytes;			// no flush bytes
 
 	friend class CDownloader;
+	friend class CDFParser;
 };
 
 /*
