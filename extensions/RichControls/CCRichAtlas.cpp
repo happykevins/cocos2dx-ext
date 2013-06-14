@@ -103,7 +103,7 @@ void CCRichAtlas::updateAtlasValues()
 			IRichElement* ele = *it;
 			RTexture* rtex = ele->getTexture();
 
-#if CC_FIX_ARTIFACTS_BY_STRECHING_TEXEL
+#if 0//CC_FIX_ARTIFACTS_BY_STRECHING_TEXEL
 			float left   = (rtex->rect.pos.x - 0.5f)/textureWide;
 			float right  = left + (rtex->rect.size.w + 1.0f)/textureWide;
 			float top    = (rtex->rect.pos.y - 0.5f)/textureHigh;

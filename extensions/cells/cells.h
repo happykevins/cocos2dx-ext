@@ -225,6 +225,8 @@ struct CProgressWatcher
 class CellsHandler
 {
 public:
+	virtual ~CellsHandler() {}
+
 	/*
 	* 返回cells系统配置规则
 	*/

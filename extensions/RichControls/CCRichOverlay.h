@@ -46,11 +46,8 @@ public:
 	virtual void ccTouchCancelled(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *pEvent);
 
 	// register listener
-	virtual void registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler);
-	virtual void registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler);
-
-	virtual void removeClickListener(CCObject* listener);
-	virtual void removeMoveListener(CCObject* listener);
+	virtual void registerListener(void* target, IRichEventHandler* listener);
+	virtual void removeListener(void* target);
 
 	CCRichOverlay();
 	virtual ~CCRichOverlay();
@@ -60,8 +57,8 @@ private:
 
 	std::list<class REleHTMLTouchable*> m_elements;
 	std::list<class REleHTMLTouchable*> m_touchables;
-	std::map<CCObject*, SEL_RichEleClickHandler> m_clickseletors;
-	std::map<CCObject*, SEL_RichEleMoveHandler> m_moveseletors;
+
+	std::map<void*, IRichEventHandler*> m_eventhandlers;
 	class REleHTMLTouchable* m_touched;
 	class IRichNode* m_container;
 };

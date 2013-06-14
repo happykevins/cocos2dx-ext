@@ -310,7 +310,7 @@ FT_Error OutlineRenderPass::decorate()
 			FT_STROKER_LINEJOIN_ROUND,
 			0);
 
-		error = FT_Glyph_StrokeBorder(&m_glyph, stroker, 0, 0);
+		error = FT_Glyph_StrokeBorder(&m_glyph, stroker, 0, 1);
 		if ( error )
 			return error;
 

@@ -170,7 +170,7 @@ RBaseCompositor::RBaseCompositor(IRichNode* container)
 
 RBaseCompositor::~RBaseCompositor()
 {
-	reset();
+	//reset();
 	m_rContainer = NULL;
 }
 

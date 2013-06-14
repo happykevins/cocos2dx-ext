@@ -95,6 +95,7 @@ struct ColorRGBA
 class IBitmap
 {
 public:
+	virtual ~IBitmap(){}
 	virtual void release() = 0;
 	virtual int width() = 0;
 	virtual int height() = 0;
@@ -170,6 +171,7 @@ extern const class IPixelBlender* PixelBlenders[e_blender_num];
 class IPixelBlender
 {
 public:
+	virtual ~IPixelBlender(){}
 	virtual ColorRGBA blend(const ColorRGBA& src, const ColorRGBA& dst) const = 0;
 
 protected:
@@ -247,6 +249,7 @@ struct RenderPassParam
 class IRenderPass
 {
 public:
+	virtual ~IRenderPass(){}
 	virtual void init(const RenderPassParam& param) = 0;
 	virtual FT_Error pre_render(FT_Glyph& glyph) = 0;
 

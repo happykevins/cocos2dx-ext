@@ -27,7 +27,64 @@
 
 #include "CCRichNode.h"
 
+#if CCRICH_ENABLE_LUA_BINDING
+#	include "CCLuaEngine.h"
+#	include "CCRichElement.h"
+#endif
+
 NS_CC_EXT_BEGIN;
+
+// lua binding
+#if CCRICH_ENABLE_LUA_BINDING
+class REvLuaHandler : public IRichEventHandler
+{
+public:
+	REvLuaHandler(int hclick, int hmoved) 
+		: m_clickhandle(hclick), m_movedhandle(hmoved)
+	{
+	}
+
+	virtual void onClick(IRichNode* root, IRichElement* ele, int _id)
+	{
+		if ( m_clickhandle )
+		{
+			REleHTMLTouchable* touchable = dynamic_cast<REleHTMLTouchable*>(ele);
+			if ( CCLuaEngine::defaultEngine() && touchable )
+			{
+				CCLuaStack* stack = CCLuaEngine::defaultEngine()->getLuaStack();
+				stack->pushInt(_id);
+				stack->pushString(touchable->getName().c_str(), touchable->getName().size());
+				stack->pushString(touchable->getValue().c_str(), touchable->getValue().size());
+				stack->executeFunctionByHandler(m_clickhandle, 3);
+			}
+		}
+	}
+
+	virtual void onMoved(IRichNode* root, IRichElement* ele, int _id, const CCPoint& location, const CCPoint& delta)
+	{
+		if ( m_movedhandle )
+		{
+			REleHTMLTouchable* touchable = dynamic_cast<REleHTMLTouchable*>(ele);
+			if ( CCLuaEngine::defaultEngine() && touchable )
+			{
+				CCLuaStack* stack = CCLuaEngine::defaultEngine()->getLuaStack();
+				stack->pushInt(_id);
+				stack->pushString(touchable->getName().c_str(), touchable->getName().size());
+				stack->pushString(touchable->getValue().c_str(), touchable->getValue().size());
+				stack->pushFloat(location.x);
+				stack->pushFloat(location.y);
+				stack->pushFloat(delta.x);
+				stack->pushFloat(delta.y);
+				stack->executeFunctionByHandler(m_movedhandle, 7);
+			}
+		}
+	}
+
+protected:
+	int m_clickhandle;
+	int m_movedhandle;
+};
+#endif//#if CCRICH_ENABLE_LUA_BINDING
 
 #define CCNODE_UTILITY_SETTER(func_name, type_name) \
 	virtual void func_name(type_name v) \
@@ -74,10 +131,42 @@ public:
 	virtual void draw();
 
 	// event handler
-	void registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler);
-	void registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler);
-	void removeClickListener(CCObject* listener);
-	void removeMoveListener(CCObject* listener);
+	template<typename T>
+	void registerClickListener(T* _target, typename REvHandler<T>::mfunc_click_t _f)
+	{
+		registerListener(_target, new REvHandler<T>(_target, _f));
+	}
+	template<typename T>
+	void registerMovedListener(T* _target, typename REvHandler<T>::mfunc_moved_t _f)
+	{
+		registerListener(_target, new REvHandler<T>(_target, _f));
+	}
+	template<typename T>
+	void registerListener(T* _target, typename REvHandler<T>::mfunc_click_t _cf, typename REvHandler<T>::mfunc_moved_t _mf)
+	{
+		registerListener(_target, new REvHandler<T>(_target, _cf, _mf));
+	}
+
+	void registerListener(void* target, IRichEventHandler* listener);
+	void removeListener(void* target);
+
+#if CCRICH_ENABLE_LUA_BINDING
+	void registerLuaClickListener(int click_handle)
+	{
+		if (click_handle)
+			registerListener((void*)click_handle, new REvLuaHandler(click_handle, 0));
+	}
+	void registerLuaMovedListener(int moved_handle)
+	{
+		if (moved_handle)
+			registerListener((void*)moved_handle, new REvLuaHandler(0, moved_handle));
+	}
+	void removeLuaListener(int handle)
+	{
+		removeListener((void*)handle);
+	}
+#endif//CCRICH_ENABLE_LUA_BINDING
+
 
 	// utilities
 	CCNODE_UTILITY_SETTER(setPreferredSize,			RSize);

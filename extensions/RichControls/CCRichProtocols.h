@@ -226,6 +226,8 @@ enum EAlignment
 class IRichElement
 {
 public:
+	virtual ~IRichElement() {}
+
 	/**
 	 * external interface
 	 */
@@ -300,6 +302,8 @@ public:
 class IRichParser
 {
 public:
+	virtual ~IRichParser() {}
+
 	// parse a utf8 format string 
 	virtual element_list_t* parseString(const char* utf8_str) = 0;
 
@@ -352,6 +356,8 @@ struct RRenderState
 class IRichCompositor
 {
 public:
+	virtual ~IRichCompositor() {}
+
 	virtual bool composit(IRichElement* root) = 0;
 
 	// get rect
@@ -395,6 +401,8 @@ public:
 class ICompositCache
 {
 public:
+	virtual ~ICompositCache() {}
+
 	virtual void appendElement(IRichElement* ele) = 0;
 	virtual RRect flush(class IRichCompositor* compositor) = 0;
 	//virtual element_list_t* getCachedElements() = 0;
@@ -419,6 +427,7 @@ public:
 class IRichAtlas
 {
 public:
+	virtual ~IRichAtlas() {}
 	virtual void appendRichElement(IRichElement* element) = 0;
 	virtual void resetRichElements() = 0;
 	virtual void updateRichRenderData() = 0;
@@ -452,15 +461,59 @@ public:
 	virtual IRichAtlas* findAtlas(class CCTexture2D* texture, unsigned int color_rgba) = 0;
 };
 
+//
 // touchable event
-typedef void (CCObject::*SEL_RichEleClickHandler)(
-	IRichNode* root, IRichElement* ele, int _id);
-typedef void (CCObject::*SEL_RichEleMoveHandler)(
-	IRichNode* root, IRichElement* ele, int _id,
-	CCPoint location, CCPoint delta);
+//
+class IRichEventHandler
+{
+public:
+	virtual void onClick(IRichNode* root, IRichElement* ele, int _id) = 0;
+	virtual void onMoved(IRichNode* root, IRichElement* ele, int _id, const CCPoint& location, const CCPoint& delta) = 0;
+};
 
-#define richclicked_selector(_SELECTOR)	(SEL_RichEleClickHandler)(&_SELECTOR)
-#define richmoved_selector(_SELECTOR)	(SEL_RichEleMoveHandler)(&_SELECTOR)
+template<typename T>
+class REvHandler : public IRichEventHandler
+{
+public:
+	typedef void (T::*mfunc_click_t)(IRichNode* root, IRichElement* ele, int _id);
+	typedef void (T::*mfunc_moved_t)(IRichNode* root, IRichElement* ele, int _id, const CCPoint& location, const CCPoint& delta);
+	//typedef void (*gfunc_click_t)(IRichNode* root, IRichElement* ele, int _id);
+
+	REvHandler(T* _t, mfunc_click_t _cf, mfunc_moved_t _mf) 
+		: m_target(_t), m_clickfunc(_cf), m_movedfunc(_mf)
+	{
+	}
+	REvHandler(T* _t, mfunc_click_t _cf) 
+		: m_target(_t), m_clickfunc(_cf), m_movedfunc(NULL)
+	{
+	}
+	REvHandler(T* _t, mfunc_moved_t _mf) 
+		: m_target(_t), m_clickfunc(NULL), m_movedfunc(_mf)
+	{
+	}
+
+	virtual void onClick(IRichNode* root, IRichElement* ele, int _id)
+	{
+		if ( m_target && m_clickfunc )
+		{
+			(m_target->*m_clickfunc)(root, ele, _id);
+		}
+	}
+
+	virtual void onMoved(IRichNode* root, IRichElement* ele, int _id, const CCPoint& location, const CCPoint& delta)
+	{
+		if ( m_target && m_movedfunc )
+		{
+			(m_target->*m_movedfunc)(root, ele, _id, location, delta);
+		}
+	}
+
+protected:
+	T* m_target;
+	mfunc_click_t m_clickfunc;
+	mfunc_moved_t m_movedfunc;
+};
+
 
 //@Deprecate
 // transfer parse utilities functions

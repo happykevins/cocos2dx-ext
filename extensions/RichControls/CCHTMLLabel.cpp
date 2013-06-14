@@ -29,6 +29,11 @@
 
 NS_CC_EXT_BEGIN;
 
+//////////////////////////////////////////////////////////////////////////
+/*
+
+*/
+//////////////////////////////////////////////////////////////////////////
 
 CCHTMLLabel* CCHTMLLabel::create()
 {
@@ -119,24 +124,14 @@ void CCHTMLLabel::draw()
 #endif
 }
 
-void CCHTMLLabel::registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler)
+void CCHTMLLabel::registerListener(void* target, IRichEventHandler* listener)
 {
-	m_rRichNode->getOverlay()->registerClickListener(listener, handler);
+	m_rRichNode->getOverlay()->registerListener(target, listener);
 }
 
-void CCHTMLLabel::registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler)
+void CCHTMLLabel::removeListener(void* target)
 {
-	m_rRichNode->getOverlay()->registerMoveListener(listener, handler);
-}
-
-void CCHTMLLabel::removeClickListener(CCObject* listener)
-{
-	m_rRichNode->getOverlay()->removeClickListener(listener);
-}
-
-void CCHTMLLabel::removeMoveListener(CCObject* listener)
-{
-	m_rRichNode->getOverlay()->removeMoveListener(listener);
+	m_rRichNode->getOverlay()->removeListener(target);
 }
 
 CCHTMLLabel::CCHTMLLabel()

@@ -123,15 +123,15 @@ bool CCRichOverlay::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent)
 
 void CCRichOverlay::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent)
 {
-	if ( m_touched && !m_moveseletors.empty() )
+	if ( m_touched && !m_eventhandlers.empty() )
 	{
 		CCPoint pt = convertToNodeSpace(pTouch->getLocation());
 		//CCLog("[Rich Touch Moved] at: %.0f, %.0f", pt.x, pt.y);
 
-		std::map<CCObject*, SEL_RichEleMoveHandler>::iterator it = m_moveseletors.begin();
-		for ( ; it!= m_moveseletors.end(); it++ )
+		std::map<void*, IRichEventHandler*>::iterator hit = m_eventhandlers.begin();
+		for ( ; hit != m_eventhandlers.end(); hit++ )
 		{
-			((it->first)->*(it->second))(
+			hit->second->onMoved(
 				getContainer(), m_touched, m_touched->getID(), 
 				pTouch->getLocation(), pTouch->getDelta());
 		}
@@ -149,11 +149,10 @@ void CCRichOverlay::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent)
 
 		if ( m_touched->isLocationInside(pt) )
 		{
-			std::map<CCObject*, SEL_RichEleClickHandler>::iterator it = m_clickseletors.begin();
-			for ( ; it!= m_clickseletors.end(); it++ )
+			std::map<void*, IRichEventHandler*>::iterator hit = m_eventhandlers.begin();
+			for ( ; hit != m_eventhandlers.end(); hit++ )
 			{
-				((it->first)->*(it->second))(getContainer(), m_touched, m_touched->getID());
-				//CCLog("[Rich Touch Clicked] name=%s, value=%s", m_touched->getName().c_str(), m_touched->getValue().c_str());
+				hit->second->onClick(getContainer(), m_touched, m_touched->getID());
 			}
 			
 		}
@@ -174,33 +173,21 @@ void CCRichOverlay::ccTouchCancelled(CCTouch *pTouch, CCEvent *pEvent)
 	}	
 }
 
-void CCRichOverlay::registerClickListener(CCObject* listener, SEL_RichEleClickHandler handler)
+void CCRichOverlay::registerListener(void* target, IRichEventHandler* listener)
 {
-	CCAssert(listener && handler, "");
-	m_clickseletors[listener] = handler;
+	CCAssert(m_eventhandlers.find(target) == m_eventhandlers.end(), "dummy target! memory leak!" );
+
+	m_eventhandlers.insert(std::make_pair(target, listener));
 }
 
-void CCRichOverlay::registerMoveListener(CCObject* listener, SEL_RichEleMoveHandler handler)
+void CCRichOverlay::removeListener(void* target)
 {
-	CCAssert(listener && handler, "");
-	m_moveseletors[listener] = handler;
-}
+	std::map<void*, IRichEventHandler*>::iterator it = m_eventhandlers.find(target);
 
-void CCRichOverlay::removeClickListener(CCObject* listener)
-{
-	std::map<CCObject*, SEL_RichEleClickHandler>::iterator it = m_clickseletors.find(listener);
-	if ( it != m_clickseletors.end() )
+	if ( it != m_eventhandlers.end() )
 	{
-		m_clickseletors.erase(it);
-	}
-}
-
-void CCRichOverlay::removeMoveListener(CCObject* listener)
-{
-	std::map<CCObject*, SEL_RichEleMoveHandler>::iterator it = m_moveseletors.find(listener);
-	if ( it != m_moveseletors.end() )
-	{
-		m_moveseletors.erase(it);
+		delete it->second;
+		m_eventhandlers.erase(it);
 	}
 }
 
@@ -210,7 +197,14 @@ CCRichOverlay::CCRichOverlay()
 }
 
 CCRichOverlay::~CCRichOverlay()
-{ 
+{
+	std::map<void*, IRichEventHandler*>::iterator hit = m_eventhandlers.begin();
+	for ( ; hit != m_eventhandlers.end(); hit++ )
+	{
+		delete hit->second;
+	}
+	m_eventhandlers.clear();
+
 	m_container = NULL;
 	m_touched = NULL;
 }
