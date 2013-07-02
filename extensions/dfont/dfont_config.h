@@ -38,7 +38,7 @@ namespace dfont
 #define DFONT_DEFAULT_FONTALIAS		"default"
 #define DFONT_DEFAULT_FONTPPI		dfont::dfont_default_ppi
 
-
+#define DFONT_BITMAP_PADDING		1
 #define DFONT_TEXTURE_SIZE_WIDTH	256
 #define DFONT_TEXTURE_SIZE_HEIGHT	256
 #define DFONT_MAX_TEXTURE_NUM_PERFONT 8
@@ -50,6 +50,7 @@ namespace dfont
 //	- 3.加入对内存占用，剩余空位等信息的实时监控接口
 //	- (?)4.多线程创建字体
 //	- (?)5.Kerning处理
+//	- 6.加入wtexture池
 //
 
 #endif//__DFONT_CONFIG_H__

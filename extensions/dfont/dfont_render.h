@@ -99,6 +99,9 @@ public:
 	virtual void release() = 0;
 	virtual int width() = 0;
 	virtual int height() = 0;
+	virtual int padding() = 0;
+	virtual int real_width() = 0;
+	virtual int real_height() = 0;
 	virtual int numbits() = 0;
 	virtual const void* get_buffer() = 0;
 	virtual bool is_managed() = 0;
@@ -110,29 +113,35 @@ public:
 class Bitmap_32bits: public IBitmap
 {
 public:
-	Bitmap_32bits(int width, int height);
-	Bitmap_32bits(unsigned int* buf, int width, int height);
+	Bitmap_32bits(int real_width, int real_height, int padding=0);
+	Bitmap_32bits(unsigned int* buf, int real_width, int real_height, int padding=0);
 	virtual ~Bitmap_32bits();
 	virtual void release();
 	
-	virtual int width() { return m_width; }
-	virtual int height() { return m_height; }
+	virtual int width() { return m_width - m_padding*2; }
+	virtual int height() { return m_height - m_padding*2; }
+	virtual int padding() { return m_padding; }
+	virtual int real_width() { return m_width; }
+	virtual int real_height() { return m_height; }
 	virtual int numbits() { return sizeof(unsigned int) << 3; }
 	virtual bool is_managed() { return m_managed; }
 	virtual const void* get_buffer() { return m_buffer; }
 
 	virtual unsigned int get_unit_at(int pos_x, int pos_y)
 	{
+		pos_x += m_padding; pos_y += m_padding;
 		return m_buffer[pos_y*m_width + pos_x];
 	}
 
 	virtual void set_unit_at(unsigned int data, int pos_x, int pos_y)
 	{
+		pos_x += m_padding; pos_y += m_padding;
 		m_buffer[pos_y*m_width + pos_x] = (unsigned int)(data & (unsigned int)-1);
 	}
 
 	virtual bool check_contains(int pos_x, int pos_y)
 	{
+		pos_x += m_padding; pos_y += m_padding;
 		if ( pos_x < 0 || pos_x >= m_width || pos_y < 0 || pos_y >= m_height )
 			return false;
 
@@ -143,6 +152,7 @@ private:
 	unsigned int* m_buffer;
 	int m_width;
 	int m_height;
+	int m_padding;
 	bool m_managed;
 };
 

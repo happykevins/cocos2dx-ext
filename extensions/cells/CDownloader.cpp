@@ -72,7 +72,7 @@ CDownloader::CDownloader(CCreationWorker* host) :
 	curl_easy_setopt(m_handle, CURLOPT_WRITEFUNCTION,
 			CDownloader::process_data);
 
-	curl_easy_setopt(m_handle, CURLOPT_CONNECTTIMEOUT, 5l);
+	curl_easy_setopt(m_handle, CURLOPT_CONNECTTIMEOUT, 15l);
 	curl_easy_setopt(m_handle, CURLOPT_TIMEOUT, 0l);
 	curl_easy_setopt(m_handle, CURLOPT_NOSIGNAL, 1L);
 	// TODO: 监测是否会产生大量CLOSE_WAIT

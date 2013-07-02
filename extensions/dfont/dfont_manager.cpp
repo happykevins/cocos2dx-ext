@@ -137,7 +137,7 @@ void WTexture2D::flush()
 
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 
 			slot->padding_rect.origin_x, slot->padding_rect.origin_y,
-			slot->metrics.width, slot->metrics.height,
+			slot->bitmap->real_width(), slot->bitmap->real_height(),
 			GL_RGBA, GL_UNSIGNED_BYTE, slot->bitmap->get_buffer()
 			);
 
@@ -176,6 +176,8 @@ GlyphSlot* WTexture2D::cache_charcode(utf32 charcode)
 			slot->metrics.advance_x = bm.advance_pixels.x;
 			slot->metrics.advance_y = bm.advance_pixels.y;
 			slot->bitmap = bm.bitmap;
+			slot->padding_rect.width = bm.bitmap->real_width();
+			slot->padding_rect.height = bm.bitmap->real_height();
 
 #if _DFONT_DEBUG
 			_dump2texture(bm.bitmap, slot->padding_rect, false);
@@ -371,7 +373,9 @@ GlyphSlot* FontCatalog::require_char(utf32 charcode)
 			// no more empty slots, create a new texture
 			if (!slot && (int)m_textures.size() < m_max_textures)
 			{
-				WTexture2D* newtex = new WTexture2D(m_font, m_texture_width, m_texture_height, m_padding_width, m_padding_height);
+				WTexture2D* newtex = new WTexture2D(
+					m_font, m_texture_width, m_texture_height, 
+					m_padding_width + DFONT_BITMAP_PADDING*2, m_padding_height + DFONT_BITMAP_PADDING*2);
 				m_textures.push_back(newtex);
 				slot = newtex->cache_charcode(charcode);
 

@@ -367,7 +367,7 @@ void REleGlyph::onCompositStart(class IRichCompositor* compositor)
 
 		m_rTexture.setTexture(m_slot->texture->user_texture<CCTexture2D>());
 		m_rTexture.rect.pos = RPos((short)m_slot->padding_rect.origin_x, (short)m_slot->padding_rect.origin_y);
-		m_rTexture.rect.size = RSize((short)m_slot->metrics.width, (short)m_slot->metrics.height);
+		m_rTexture.rect.size = RSize((short)m_slot->padding_rect.width, (short)m_slot->padding_rect.height);
 
 		RRenderState* state = compositor->getRenderState();
 		m_font_alias = state->font_alias;

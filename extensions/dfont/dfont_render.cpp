@@ -36,8 +36,8 @@ const IPixelBlender* PixelBlenders[e_blender_num] =
 };
 
 
-Bitmap_32bits::Bitmap_32bits(int width, int height)
-	: m_buffer(NULL), m_width(width), m_height(height), m_managed(true)
+Bitmap_32bits::Bitmap_32bits(int width, int height, int padding)
+	: m_buffer(NULL), m_width(width), m_height(height), m_padding(padding), m_managed(true)
 {
 	m_buffer = new unsigned int[width * height];
 	memset(m_buffer, 0, width * height * sizeof(unsigned int));
@@ -55,8 +55,8 @@ Bitmap_32bits::Bitmap_32bits(int width, int height)
 	}
 #endif//_DFONT_DEBUG
 }
-Bitmap_32bits::Bitmap_32bits(unsigned int* buf, int width, int height)
-	: m_buffer(buf), m_width(width), m_height(height), m_managed(false)
+Bitmap_32bits::Bitmap_32bits(unsigned int* buf, int width, int height, int padding)
+	: m_buffer(buf), m_width(width), m_height(height), m_padding(padding), m_managed(false)
 {
 }
 Bitmap_32bits::~Bitmap_32bits() 
@@ -465,6 +465,7 @@ FT_Error GlyphRenderer::render(FT_Glyph& glyph, IBitmap** pbuf, FT_Vector* top_l
 	FT_Error error = 0;
 	FT_BBox bbox;
 	FT_F26Dot6 stroke_radius = 0;
+	
 	IBitmap* buf = *pbuf;
 	memset(&bbox, 0, sizeof(bbox));
 	std::vector<IRenderPass*>* passes = NULL;
@@ -483,7 +484,7 @@ FT_Error GlyphRenderer::render(FT_Glyph& glyph, IBitmap** pbuf, FT_Vector* top_l
 		return -1;
 	}
 
-	for ( size_t i = 0; i < m_outline_passes.size(); i++ )
+	for ( size_t i = 0; i < passes->size(); i++ )
 	{
 		stroke_radius = (*passes)[i]->stroke_radius() > stroke_radius ? (*passes)[i]->stroke_radius() : stroke_radius;
 		error = (*passes)[i]->pre_render(glyph);
@@ -493,7 +494,7 @@ FT_Error GlyphRenderer::render(FT_Glyph& glyph, IBitmap** pbuf, FT_Vector* top_l
 
 	if ( buf == NULL )
 	{
-		buf = new Bitmap_32bits( (bbox.xMax - bbox.xMin) >> 6, (bbox.yMax - bbox.yMin) >> 6 );
+		buf = new Bitmap_32bits( ((bbox.xMax - bbox.xMin) >> 6) + 2*DFONT_BITMAP_PADDING, ((bbox.yMax - bbox.yMin) >> 6) + 2*DFONT_BITMAP_PADDING, DFONT_BITMAP_PADDING );
 		*pbuf = buf;
 	}
 
@@ -504,8 +505,8 @@ FT_Error GlyphRenderer::render(FT_Glyph& glyph, IBitmap** pbuf, FT_Vector* top_l
 
 	if ( top_left_pixel )
 	{
-		top_left_pixel->x = bbox.xMin >> 6;
-		top_left_pixel->y = (bbox.yMax >> 6) - 1;
+		top_left_pixel->x = (bbox.xMin >> 6) /*- DFONT_BITMAP_PADDING*/;
+		top_left_pixel->y = (bbox.yMax >> 6) - 1 /*+ DFONT_BITMAP_PADDING*/;
 	}
 
 	if ( advance_pixel )
@@ -514,7 +515,7 @@ FT_Error GlyphRenderer::render(FT_Glyph& glyph, IBitmap** pbuf, FT_Vector* top_l
 		//advance_pixel->x = round_26dot6(bbox.xMax - bbox.xMin) >> 6;
 		//advance_pixel->x = advance_pixel->x < (glyph->advance.x >> 16) ? (glyph->advance.x >> 16) : advance_pixel->x;
 		advance_pixel->x = (glyph->advance.x >> 16) + correct;
-		advance_pixel->y = round_26dot6(bbox.yMax - bbox.yMin) >> 6;
+		advance_pixel->y = (round_26dot6(bbox.yMax - bbox.yMin) >> 6);
 	}
 
 	return error;

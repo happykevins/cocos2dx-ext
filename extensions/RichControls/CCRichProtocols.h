@@ -440,6 +440,7 @@ public:
 class IRichNode
 {
 public:
+	virtual ~IRichNode() {}
 	virtual IRichParser* getParser() = 0;
 	virtual IRichCompositor* getCompositor() = 0;
 	virtual RSize getActualSize() = 0;
