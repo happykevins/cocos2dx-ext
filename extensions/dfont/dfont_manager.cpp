@@ -129,6 +129,11 @@ int WTexture2D::height()
 // flush data to GPU
 void WTexture2D::flush()
 {
+    //box@hulijun.cn: fix skewed bug
+    //http://www.opengl.org/archives/resources/features/KilgardTechniques/oglpitfall/
+    //GL_UNPACK_ALIGNMENT
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
 	ccGLBindTexture2D(user_texture<CCTexture2D>()->getName());
 
 	for ( size_t i = 0; i < m_dirty_slots.size(); i++ )
