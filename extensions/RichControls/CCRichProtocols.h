@@ -34,8 +34,8 @@
 //
 //	Rich Controls
 //	- TODO: support CCNode CCSprite CCAnimation
-//	- TODO: Touchable Element dispatch to script engine
-//	- TODO: word wrap, using css inline-style
+//	- TODO: word wrap processing
+//	- TODO: table composit has bugs if set ratio-width
 //
 
 NS_CC_EXT_BEGIN;
@@ -256,6 +256,7 @@ public:
 	virtual RPos getGlobalPosition() = 0;		// global position	
 	
 	virtual RMetrics* getMetrics() = 0;		// element metrics
+	virtual bool scaleToElementSize() = 0;  // if texture is scale to element size
 
 
 	/**
@@ -433,6 +434,10 @@ public:
 	virtual void updateRichRenderData() = 0;
 };
 
+static const int ZORDER_CONTEXT		= 100;
+static const int ZORDER_OVERLAY		= 0;
+static const int ZORDER_BACKGROUND	= -100;
+
 //
 // Rich Node protocol
 //	- describes how a rich control work
@@ -457,9 +462,10 @@ public:
 	// overlay utility
 	virtual void addOverlay(IRichElement* overlay) = 0;
 	virtual void addCCNode(class CCNode* node) = 0;
+	virtual void removeCCNode(class CCNode* node) = 0;
 
 	// batch utility
-	virtual IRichAtlas* findAtlas(class CCTexture2D* texture, unsigned int color_rgba) = 0;
+	virtual IRichAtlas* findAtlas(class CCTexture2D* texture, unsigned int color_rgba, int zorder = ZORDER_CONTEXT) = 0;
 };
 
 //

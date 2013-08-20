@@ -61,6 +61,32 @@ bool REleBase::hasAttribute(attrs_t* attrs, const char* attr)
 	return false;
 }
 
+CCNode* REleBase::createDrawSolidPolygonNode(RRichCanvas canvas)
+{
+	CCDrawNode* drawNode = CCDrawNode::create();
+
+	RRect rect = m_rMetrics.rect;
+	RPos gp = getGlobalPosition();
+	short left = gp.x;
+	short top = gp.y;// + canvas.root->getActualSize().h;
+	short right = left + rect.size.w;
+	short bottom = top - rect.size.h;
+
+	CCPoint vertices[4] = {
+		ccp(left, bottom),	// lb
+		ccp(right,bottom),	// rb
+		ccp(right,top),		// rt
+		ccp(left,top),		// lt
+	};
+
+	unsigned int color = getColor();
+	ccColor4F color4f = ccc4FFromccc4B(ccc4(color & 0xff, color >> 8 & 0xff, color >> 16 & 0xff, color >> 24 & 0xff));
+
+	drawNode->drawPolygon(vertices, 4, color4f, 0.0f, color4f);
+
+	return drawNode;
+}
+
 bool REleBase::parse(class IRichParser* parser, const char** attr /*= NULL*/) 
 { 
 	attrs_t* attrs = parseAttributes(attr);
@@ -283,6 +309,7 @@ REleBase::REleBase()
 , m_rMetrics()
 , m_rTexture()
 , m_rColor(0xffffffff)
+, m_rDirty(false)
 {
 
 }
@@ -296,6 +323,12 @@ REleBase::~REleBase()
 //////////////////////////////////////////////////////////////////////////
 // Common Elements
 
+CCNode* REleSolidPolygon::createDrawNode(RRichCanvas canvas)
+{
+	this->render(canvas);
+	return createDrawSolidPolygonNode(canvas);
+}
+/**
 void REleSolidPolygon::onRenderPost(RRichCanvas canvas)
 {
 	RRect rect = m_rMetrics.rect;
@@ -316,7 +349,7 @@ void REleSolidPolygon::onRenderPost(RRichCanvas canvas)
 	ccColor4F color4f = ccc4FFromccc4B(ccc4(color & 0xff, color >> 8 & 0xff, color >> 16 & 0xff, color >> 24 & 0xff));
 	ccDrawSolidPoly(vertices, 4, color4f);
 }
-
+*/
 bool REleBatchedDrawable::onCompositFinish(class IRichCompositor* compositor) 
 {
 	m_rDirty = true;
@@ -346,9 +379,29 @@ void REleBatchedDrawable::onRenderPrev(RRichCanvas canvas)
 }
 
 REleBatchedDrawable::REleBatchedDrawable()
-	: m_rDirty(false)
 {
 
+}
+
+void RAtlasHelper::onRenderPrev(RRichCanvas canvas)
+{
+	if ( m_rDirty )
+	{
+		m_rDirty = false;
+
+		// add to batch
+		CCTexture2D* ob_texture = NULL;
+		if ( NULL != this->getTexture() 
+			&& NULL != (ob_texture = this->getTexture()->getTexture()) )
+		{
+			IRichAtlas* atlas = canvas.root->findAtlas(ob_texture, getColor(), ZORDER_BACKGROUND);
+
+			if (atlas)
+			{
+				atlas->appendRichElement(this);
+			}
+		}
+	}
 }
 
 void REleGlyph::onCompositStart(class IRichCompositor* compositor)
@@ -869,27 +922,48 @@ void REleHTMLSpans::onRenderPost(RRichCanvas canvas)
 		travesalChildrenSpans(
 			this->getChildren(), font, start_pen_x, pen_y, thickness, end_draw_x, draw_y, max_height, color, true);
 
+		// draw underline
+		if ( isDrawUnderline() )
+		{
+			for ( size_t i = 0; i < m_rUnderlineDrawables.size(); i++ )
+			{
+				CCNode* drawNode = m_rUnderlineDrawables[i]->createDrawNode(canvas);
+				drawNode->setZOrder(ZORDER_OVERLAY);
+				canvas.root->addCCNode(drawNode);
+			}
+		}
+
+		// draw background
+		if ( isDrawBackground() )
+		{
+			for ( size_t i = 0; i < m_rBackgroudDrawables.size(); i++ )
+			{
+				CCNode* drawNode = m_rBackgroudDrawables[i]->createDrawNode(canvas);
+				drawNode->setZOrder(ZORDER_OVERLAY);
+				canvas.root->addCCNode(drawNode);
+			}
+		}
+
 		m_rDirty = false;
 	}
+	
+	//// draw underline
+	//if ( isDrawUnderline() )
+	//{
+	//	for ( size_t i = 0; i < m_rUnderlineDrawables.size(); i++ )
+	//	{
+	//		m_rUnderlineDrawables[i]->render(canvas);
+	//	}
+	//}
 
-	// draw underline
-	if ( isDrawUnderline() )
-	{
-		for ( size_t i = 0; i < m_rUnderlineDrawables.size(); i++ )
-		{
-			m_rUnderlineDrawables[i]->render(canvas);
-		}
-	}
-
-	// draw background
-	if ( isDrawBackground() )
-	{
-		for ( size_t i = 0; i < m_rBackgroudDrawables.size(); i++ )
-		{
-			m_rBackgroudDrawables[i]->render(canvas);
-		}
-	}
-
+	//// draw background
+	//if ( isDrawBackground() )
+	//{
+	//	for ( size_t i = 0; i < m_rBackgroudDrawables.size(); i++ )
+	//	{
+	//		m_rBackgroudDrawables[i]->render(canvas);
+	//	}
+	//}
 }
 
 void REleHTMLSpans::clearAllSpans()
@@ -910,9 +984,9 @@ void REleHTMLSpans::clearAllSpans()
 }
 
 REleHTMLSpans::REleHTMLSpans()
-	: m_rDirty(true), m_rDrawUnderline(false), m_rDrawBackground(false), m_rBGColor(0xffffffff)
+	: m_rDrawUnderline(false), m_rDrawBackground(false), m_rBGColor(0xffffffff)
 {
-
+	m_rDirty = true;
 }
 
 REleHTMLSpans::~REleHTMLSpans()
@@ -956,6 +1030,8 @@ bool REleHTMLHR::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 		CC_SAFE_DELETE(style_attrs);
 	}
 
+	m_rDirty = true;
+
 	return true;
 }
 
@@ -992,6 +1068,7 @@ bool REleHTMLHR::onCompositFinish(class IRichCompositor* compositor)
 
 void REleHTMLHR::onRenderPost(RRichCanvas canvas)
 {
+	/**
 	RRect rect = m_rMetrics.rect;
 	RPos gp = getGlobalPosition();
 	short left = gp.x;
@@ -1021,6 +1098,15 @@ void REleHTMLHR::onRenderPost(RRichCanvas canvas)
 	color4f.g *= 0.2f;
 	color4f.b *= 0.2f;
 	ccDrawSolidPoly(vertices_shadow, 4, color4f);	
+	**/
+
+	if (m_rDirty)
+	{
+		CCNode* drawNode = createDrawSolidPolygonNode(canvas);
+		drawNode->setZOrder(ZORDER_CONTEXT);
+		canvas.root->addCCNode(drawNode);
+		m_rDirty = false;
+	}
 }
 
 REleHTMLHR::REleHTMLHR()
@@ -1035,7 +1121,7 @@ REleHTMLHR::REleHTMLHR()
 bool REleHTMLCell::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 {
 	m_rWidth = parseOptSize((*attrs)["width"]);
-	m_rHeight = parseOptSize( (*attrs)["height"]);
+	m_rHeight = parseOptSize((*attrs)["height"]);
 
 	m_rHAlignSpecified = parseAlignment((*attrs)["align"], m_rHAlignment);
 	m_rVAlignSpecified = parseAlignment((*attrs)["valign"], m_rVAlignment);
@@ -1053,13 +1139,47 @@ bool REleHTMLCell::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 	// color
 	m_rColor = parseColor((*attrs)["bgcolor"]);
 
+	m_rBGTexture.setDirty(false);
+	if ( hasAttribute(attrs, "bg-image") )
+	{
+		std::string bg_filename = (*attrs)["bg-image"];
+		CCTexture2D* texture = cocos2d::CCTextureCache::sharedTextureCache()->addImage(bg_filename.c_str());
+		if ( texture )
+		{
+			m_rBGTexture.setDirty(true);
+			if (m_rColor) 
+			{
+				m_rBGTexture.setRColor(m_rColor);
+				m_rColor = 0;
+			}
+			RTexture* bg_texture = m_rBGTexture.getTexture();
+			bg_texture->setTexture(texture);
+
+			if ( hasAttribute(attrs, "bg-rect") )
+			{
+				RMargin margin = REleHTMLNode::parseMargin( (*attrs)["bg-rect"] );
+				bg_texture->rect.pos.x = margin.left;
+				bg_texture->rect.pos.y = margin.top;
+				bg_texture->rect.size.h = margin.bottom - margin.top;
+				bg_texture->rect.size.w = margin.right - margin.left;
+			}
+			else
+			{
+				bg_texture->rect.size.w = texture->getPixelsWide();
+				bg_texture->rect.size.h = texture->getPixelsHigh();
+			}
+		}
+	}
+
+	m_rDirty = true;
+
 	return true;
 }
 
 void REleHTMLCell::onRenderPrev(RRichCanvas canvas)
 {
 	// render background
-	if ( m_rColor )
+	if ( m_rDirty || m_rBGTexture.isDirty() )
 	{
 		RRect rect = m_rMetrics.rect;
 		RPos gp = getGlobalPosition();
@@ -1068,19 +1188,21 @@ void REleHTMLCell::onRenderPrev(RRichCanvas canvas)
 		short right = left + rect.size.w;
 		short bottom = top - rect.size.h - 1;
 
-		CCPoint vertices[4]={
-			ccp(left,bottom),ccp(right,bottom),
-			ccp(right,top),ccp(left,top),
-		};
+		if (m_rDirty && m_rColor)
+		{
+			CCNode* drawNode = createDrawSolidPolygonNode(canvas);
+			drawNode->setZOrder(ZORDER_OVERLAY);
+			canvas.root->addCCNode(drawNode);
+		}
 
-		ccColor4B bgcolor4b = ccc4(
-			m_rColor & 0xff, 
-			m_rColor >> 8 & 0xff, 
-			m_rColor >> 16 & 0xff,
-			m_rColor >> 24 & 0xff);
-		ccColor4F bgcolor4f = ccc4FFromccc4B(bgcolor4b);
+		if ( m_rBGTexture.isDirty() )
+		{
+			m_rBGTexture.setGlobalPosition(gp);
+			m_rBGTexture.getMetrics()->rect.size = RSize(rect.size.w, rect.size.h);
+			m_rBGTexture.onRenderPrev(canvas);
+		}
 
-		ccDrawSolidPoly(vertices, 4, bgcolor4f);
+		m_rDirty = false;
 	}
 }
 
@@ -1105,6 +1227,10 @@ REleHTMLCell::REleHTMLCell(class REleHTMLRow* row)
 {
 	// content alignment should not effect
 	m_rLineCache.setHAlign(e_align_left);
+}
+
+REleHTMLCell::~REleHTMLCell()
+{
 }
 
 bool REleHTMLRow::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
@@ -1234,8 +1360,8 @@ bool REleHTMLTable::onParseAttributes(class IRichParser* parser, attrs_t* attrs 
 		parseColor((*attrs)["bordercolor"]) : m_rBorderColor;
 
 	// draw border
-	m_rFrame = hasAttribute(attrs, "frames") ?
-		parseFrame((*attrs)["frames"]) : e_void;
+	m_rFrame = hasAttribute(attrs, "frame") ?
+		parseFrame((*attrs)["frame"]) : e_void;
 
 	m_rRules = hasAttribute(attrs, "rules") ?
 		parseRules((*attrs)["rules"]) : e_none;
@@ -1244,6 +1370,8 @@ bool REleHTMLTable::onParseAttributes(class IRichParser* parser, attrs_t* attrs 
 
 	m_rTableCache.setPadding(padding);
 	m_rTableCache.setSpacing(spacing);
+
+	m_rDirty = true;
 
 	return true;
 }
@@ -1301,7 +1429,7 @@ bool REleHTMLTable::onCompositFinish(class IRichCompositor* compositor)
 	return true; 
 }
 
-void REleHTMLTable::drawThicknessLine(short left, short top, short right, short bottom, const cocos2d::ccColor4F& color)
+void REleHTMLTable::drawThicknessLine(short left, short top, short right, short bottom, const ccColor4F& color)
 {
 	CCPoint vertices[4]={
 		ccp(left,bottom),ccp(right,bottom),
@@ -1311,8 +1439,27 @@ void REleHTMLTable::drawThicknessLine(short left, short top, short right, short 
 	ccDrawSolidPoly(vertices, 4, color);
 }
 
+void REleHTMLTable::createTicknessLineNode(RRichCanvas canvas, short left, short top, short right, short bottom, const ccColor4F& color)
+{
+	CCDrawNode* drawNode = CCDrawNode::create();
+
+	CCPoint vertices[4]={
+		ccp(left,bottom),ccp(right,bottom),
+		ccp(right,top),ccp(left,top),
+	};
+
+	drawNode->drawPolygon(vertices, 4, color, 0.0f, color);
+	drawNode->setZOrder(ZORDER_OVERLAY);
+	canvas.root->addCCNode(drawNode);
+}
+
 void REleHTMLTable::onRenderPrev(RRichCanvas canvas) 
 {
+	if ( !m_rDirty )
+		return;
+
+	m_rDirty = false;
+
 	RRect rect = m_rMetrics.rect;
 	RPos gp = getGlobalPosition();
 	short left = gp.x;
@@ -1332,7 +1479,8 @@ void REleHTMLTable::onRenderPrev(RRichCanvas canvas)
 
 		ccColor4F bgcolor4f = ccc4FFromccc4B(bgcolor4b);
 
-		drawThicknessLine(left, top, right, bottom, bgcolor4f);
+		//drawThicknessLine(left, top, right, bottom, bgcolor4f);
+		createTicknessLineNode(canvas, left, top, right, bottom, bgcolor4f);
 	}
 
 	// frame color
@@ -1343,8 +1491,6 @@ void REleHTMLTable::onRenderPrev(RRichCanvas canvas)
 		m_rBorderColor >> 24 & 0xff);
 
 	ccColor4F color4f = ccc4FFromccc4B(color4b);
-
-	//ccDrawColor4B(color4b.r, color4b.g, color4b.b, color4b.a);
 
 	// render frame lines
 	if ( m_rBorder > 0 && m_rBorderColor )
@@ -1389,16 +1535,20 @@ void REleHTMLTable::onRenderPrev(RRichCanvas canvas)
 
 		// top line
 		if(draw_top)
-			drawThicknessLine(left, top, right, top - m_rBorder, color4f);
+			createTicknessLineNode(canvas, left, top, right, top - m_rBorder, color4f);
+			//drawThicknessLine(left, top, right, top - m_rBorder, color4f);
 		// bottom line
 		if(draw_bottom)
-			drawThicknessLine(left, bottom + m_rBorder, right, bottom, color4f);
+			createTicknessLineNode(canvas, left, bottom + m_rBorder, right, bottom, color4f);
+			//drawThicknessLine(left, bottom + m_rBorder, right, bottom, color4f);
 		// left line
 		if(draw_left)
-			drawThicknessLine(left, top, left + m_rBorder, bottom, color4f);
+			createTicknessLineNode(canvas, left, top, left + m_rBorder, bottom, color4f);
+			//drawThicknessLine(left, top, left + m_rBorder, bottom, color4f);
 		// right line
 		if(draw_right)
-			drawThicknessLine(right - m_rBorder, top, right, bottom, color4f);
+			createTicknessLineNode(canvas, right - m_rBorder, top, right, bottom, color4f);
+			//drawThicknessLine(right - m_rBorder, top, right, bottom, color4f);
 	}
 
 	bool draw_hline = false;
@@ -1436,7 +1586,8 @@ void REleHTMLTable::onRenderPrev(RRichCanvas canvas)
 				ccp(rright,rtop),ccp(rleft,rtop)
 			};
 
-			ccDrawSolidPoly(vertices, 4, color4f);
+			//drawThicknessLine(rleft, rtop, rright, rbottom, color4f);
+			createTicknessLineNode(canvas, rleft, rtop, rright, rbottom, color4f);
 		}
 	}
 
@@ -1458,7 +1609,8 @@ void REleHTMLTable::onRenderPrev(RRichCanvas canvas)
 				ccp(cright,ctop),ccp(cleft,ctop)
 			};
 
-			ccDrawSolidPoly(vertices, 4, color4f);
+			//drawThicknessLine(cleft, ctop, cright, cbottom, color4f);
+			createTicknessLineNode(canvas, cleft, ctop, cright, cbottom, color4f);
 		}
 	}
 }
@@ -1483,19 +1635,14 @@ bool REleHTMLImg::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 	m_filename = (*attrs)["src"];
 	m_alt = (*attrs)["alt"];
 
-	if ( hasAttribute(attrs, "style") )
+	if ( hasAttribute(attrs, "texture-rect") )
 	{
-		attrs_t* style_attrs = REleHTMLNode::parseStyle((*attrs)["style"]);
+		RMargin margin = REleHTMLNode::parseMargin( (*attrs)["texture-rect"] );
 
-		if ( hasAttribute(style_attrs, "texture-rect") )
-		{
-			RMargin margin = REleHTMLNode::parseMargin( (*style_attrs)["texture-rect"] );
-			m_rTexture.rect.pos.x = margin.left;
-			m_rTexture.rect.pos.y = margin.top;
-			m_rTexture.rect.size.h = margin.bottom - margin.top;
-			m_rTexture.rect.size.w = margin.right - margin.left;
-		}
-		CC_SAFE_DELETE(style_attrs);
+		m_rTexture.rect.pos.x = margin.left;
+		m_rTexture.rect.pos.y = margin.top;
+		m_rTexture.rect.size.h = margin.bottom - margin.top;
+		m_rTexture.rect.size.w = margin.right - margin.left;
 	}
 
 	return true;

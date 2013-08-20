@@ -45,6 +45,8 @@ public:
 	static attrs_t*		parseAttributes(const char** attrs);
 	static bool			hasAttribute(attrs_t* attrs, const char* attr);
 
+	CCNode* createDrawSolidPolygonNode(RRichCanvas canvas);
+
 public:
 	virtual bool parse(class IRichParser* parser, const char** attr = NULL);
 	virtual bool composit(class IRichCompositor* compositor);
@@ -74,6 +76,7 @@ public:
 	virtual RMetrics* getMetrics() { return &m_rMetrics; }
 	
 	virtual RTexture* getTexture() { return &m_rTexture; }
+	virtual bool scaleToElementSize() { return false; }
 	virtual void setRColor(unsigned int color) { m_rColor = color; }
 	virtual unsigned int getColor() { return m_rColor; }
 	virtual const char* getFontAlias() { return NULL; }
@@ -129,6 +132,7 @@ protected:
 	RTexture m_rTexture;
 
 	unsigned int m_rColor;
+	bool m_rDirty;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -140,8 +144,10 @@ protected:
 //
 class REleSolidPolygon : public REleBase
 {
-protected:
-	virtual void onRenderPost(RRichCanvas canvas);
+public:
+	CCNode* createDrawNode(RRichCanvas canvas);
+//protected:
+//	virtual void onRenderPost(RRichCanvas canvas);
 };
 
 //
@@ -159,9 +165,21 @@ public:
 protected:
 	virtual bool onCompositFinish(class IRichCompositor* compositor);
 	virtual void onRenderPrev(RRichCanvas canvas);
+};
 
-private:
-	bool m_rDirty;
+//
+// Atlas Drawable Helper
+//
+class RAtlasHelper : public REleBatchedDrawable
+{
+public:
+	virtual bool scaleToElementSize() { return true; }
+
+	virtual void onRenderPrev(RRichCanvas canvas);
+	virtual bool isDirty() { return m_rDirty; }
+	virtual void setDirty(bool b) { m_rDirty = b; }
+
+	virtual void setGlobalPosition(RPos pos) { m_rGlobalPos = pos; }
 };
 
 //
@@ -334,7 +352,6 @@ private:
 	void clearAllSpans();
 
 protected:
-	bool m_rDirty;
 	bool m_rDrawUnderline;
 	bool m_rDrawBackground;
 	unsigned int m_rBGColor;
@@ -397,6 +414,8 @@ protected:
 //	- attr: spacing=<n>				- text spacing
 //	- attr: nowrap=nowrap			- text do not wrap line
 //	- attr: bgcolor=#rrggbb[aa]
+//	- attr: bg-image="image file path"
+//	- attr: bg-rect="<TOP>px <RIGHT>px <BOTTOM>px <LEFT>px"
 //
 class REleHTMLCell : public REleHTMLNode
 {
@@ -406,6 +425,7 @@ public:
 	virtual void onRenderPrev(RRichCanvas canvas);
 
 	REleHTMLCell(class REleHTMLRow* row);
+	virtual ~REleHTMLCell();
 
 protected:
 	virtual bool onParseAttributes(class IRichParser* parser, attrs_t* attrs );
@@ -423,6 +443,7 @@ private:
 	ROptSize m_rWidth;
 	ROptSize m_rHeight;
 	RRect m_rContentSize;
+	RAtlasHelper m_rBGTexture;
 };
 
 //
@@ -519,9 +540,11 @@ protected:
 	virtual void onCompositChildrenEnd(class IRichCompositor* compositor);
 	virtual bool onCompositFinish(class IRichCompositor* compositor);
 	virtual void onRenderPrev(RRichCanvas canvas);
-	virtual void drawThicknessLine(short left, short top, short right, short bottom, const cocos2d::ccColor4F& color);
-
+	virtual void drawThicknessLine(short left, short top, short right, short bottom, const ccColor4F& color);
+	
 private:
+	void createTicknessLineNode(RRichCanvas canvas, short left, short top, short right, short bottom, const ccColor4F& color);
+
 	static EFrame parseFrame(const std::string& str);
 	static ERules parseRules(const std::string& str);
 
@@ -544,8 +567,7 @@ private:
 //	- static image: <img>
 //	- attr: src=<resource-path>
 //	- attr: alt=<string>		- not in use yet!
-//	- css inline-style
-//		- textrue-rect:<TOP>px <RIGHT>px <BOTTOM>px <LEFT>px
+//	- attr: texture-rect="<TOP>px <RIGHT>px <BOTTOM>px <LEFT>px"
 //
 class REleHTMLImg : public REleBatchedDrawable
 {

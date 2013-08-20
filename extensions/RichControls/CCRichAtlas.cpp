@@ -111,8 +111,10 @@ void CCRichAtlas::updateAtlasValues()
 
 			float ele_pos_left = ele->getGlobalPosition().x;
 			float ele_pos_top = ele->getGlobalPosition().y;
-			float ele_width = rtex->rect.size.w /*+ 1.0f*/;
-			float ele_height = rtex->rect.size.h /*+ 1.0f*/;
+			float ele_width = ele->scaleToElementSize() ? 
+				ele->getMetrics()->rect.size.w : rtex->rect.size.w;
+			float ele_height = ele->scaleToElementSize() ? 
+				ele->getMetrics()->rect.size.h : rtex->rect.size.h;
 #else
 			float left   = rtex->rect.pos.x/textureWide;
 			float right  = left + rtex->rect.size.w/textureWide;
@@ -121,8 +123,10 @@ void CCRichAtlas::updateAtlasValues()
 
 			float ele_pos_left = ele->getGlobalPosition().x;
 			float ele_pos_top = ele->getGlobalPosition().y;
-			float ele_width = rtex->rect.size.w;
-			float ele_height = rtex->rect.size.h;
+			float ele_width = ele->scaleToElementSize() ? 
+				ele->getMetrics()->rect.size.w : rtex->rect.size.w;
+			float ele_height = ele->scaleToElementSize() ? 
+				ele->getMetrics()->rect.size.h : rtex->rect.size.h;
 #endif // ! CC_FIX_ARTIFACTS_BY_STRECHING_TEXEL
 
 			quad.tl.texCoords.u = left;

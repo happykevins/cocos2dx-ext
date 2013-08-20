@@ -49,10 +49,10 @@ CCHTMLLabel* CCHTMLLabel::create()
 	return NULL;
 }
 
-CCHTMLLabel* CCHTMLLabel::createWithString(const char* rich_string, const CCSize& preferred_size, const char* font_alias)
+CCHTMLLabel* CCHTMLLabel::createWithString(const char* utf8_str, const CCSize& preferred_size, const char* font_alias)
 {
 	CCHTMLLabel* label = new CCHTMLLabel;
-	if ( label && label->initWithString(rich_string, preferred_size, font_alias) )
+	if ( label && label->initWithString(utf8_str, preferred_size, font_alias) )
 	{
 		label->autorelease();
 		return label;
@@ -63,7 +63,7 @@ CCHTMLLabel* CCHTMLLabel::createWithString(const char* rich_string, const CCSize
 	return NULL;
 }
 
-bool CCHTMLLabel::initWithString(const char* rich_string, const CCSize& preferred_size, const char* font_alias)
+bool CCHTMLLabel::initWithString(const char* utf8_str, const CCSize& preferred_size, const char* font_alias)
 {
 	CCAssert(m_rRichNode == NULL, "");
 
@@ -84,18 +84,18 @@ bool CCHTMLLabel::initWithString(const char* rich_string, const CCSize& preferre
 	m_rRichNode->setDefaultFontAlias(font_alias);
 	m_rRichNode->setPreferredSize(RSize((short)preferred_size.width, (short)preferred_size.height));
 
-	if ( rich_string )
+	if ( utf8_str )
 	{
-		setString(rich_string);
+		setString(utf8_str);
 	}
 
 	return true;
 }
 
 // from CCLabelProtocol
-void CCHTMLLabel::setString(const char *label) 
+void CCHTMLLabel::setString(const char *utf8_str) 
 {
-	m_rRichNode->setStringUTF8(label);
+	m_rRichNode->setStringUTF8(utf8_str);
 }
 
 const char* CCHTMLLabel::getString(void) 
@@ -103,9 +103,9 @@ const char* CCHTMLLabel::getString(void)
 	return m_rRichNode->getStringUTF8();
 }
 
-void CCHTMLLabel::appendString(const char *label)
+void CCHTMLLabel::appendString(const char *utf8_str)
 {
-	m_rRichNode->appendStringUTF8(label);
+	m_rRichNode->appendStringUTF8(utf8_str);
 }
 
 void CCHTMLLabel::draw()
