@@ -226,7 +226,7 @@ public:
 	static short		parsePixel(const std::string& str);
 	static float		parsePercent(const std::string& str);
 	static bool			parseAlignment(const std::string& str, EAlignment& align);
-	static void			processZone(RRect& zone, const ROptSize& width, const ROptSize& height, bool auto_size=false);
+	//static void			processZone(RRect& zone, const ROptSize& width, const ROptSize& height, bool auto_fill_zone=false);
 };
 
 //
@@ -423,6 +423,8 @@ class REleHTMLCell : public REleHTMLNode
 public:
 	virtual bool pushMetricsState() { return true; }
 	virtual void onRenderPrev(RRichCanvas canvas);
+	void setIndex(int index) { m_rIndexNumber = index; }
+	bool isWidthSet() { return !m_rWidth.isZero(); }
 
 	REleHTMLCell(class REleHTMLRow* row);
 	virtual ~REleHTMLCell();
@@ -438,6 +440,7 @@ private:
 
 	bool m_rHAlignSpecified;
 	bool m_rVAlignSpecified;
+	int m_rIndexNumber;
 	EAlignment m_rHAlignment;
 	EAlignment m_rVAlignment;
 	ROptSize m_rWidth;
@@ -462,6 +465,7 @@ public:
 
 	virtual std::vector<class REleHTMLCell*>& getCells();
 	class REleHTMLTable* getTable();
+	short getCellWidth(int index, ROptSize width);
 
 	virtual void addChildren(IRichElement* child);
 
@@ -469,6 +473,7 @@ public:
 
 protected:
 	virtual bool onParseAttributes(class IRichParser* parser, attrs_t* attrs );
+	virtual void onCompositStatePushed(class IRichCompositor* compositor);
 	virtual bool onCompositFinish(class IRichCompositor* compositor) { return true; }
 
 private:
@@ -479,6 +484,7 @@ private:
 	bool m_rVAlignSpecified;
 	EAlignment m_rHAlignment;
 	EAlignment m_rVAlignment;
+	short m_rLeftWidth;
 };
 
 
@@ -528,6 +534,8 @@ public:
 	virtual bool isNewlineBefore() { return true; }
 	virtual bool isNewlineFollow()	{ return true; }
 
+	virtual short getZoneWidth() { return m_rZoneWidth; }
+
 	virtual void onCachedCompositBegin(class ICompositCache* cache, RPos& pen);
 	virtual void onCachedCompositEnd(class ICompositCache* cache, RPos& pen);
 
@@ -560,6 +568,7 @@ private:
 	bool m_rHAlignSpecified;
 	EAlignment m_rHAlign;
 	EAlignment m_rTempAlign;
+	short m_rZoneWidth;
 };
 
 //

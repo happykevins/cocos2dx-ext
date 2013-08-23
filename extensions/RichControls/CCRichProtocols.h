@@ -35,7 +35,9 @@
 //	Rich Controls
 //	- TODO: support CCNode CCSprite CCAnimation
 //	- TODO: word wrap processing
-//	- TODO: table composit has bugs if set ratio-width
+//	- TODO: embedded Script
+//	- TODO: nested CCHTMLLabel
+//	- TODO: BUG - colored/image background draw order for nested tables
 //
 
 NS_CC_EXT_BEGIN;
@@ -139,6 +141,9 @@ struct ROptSize
 		: absolute(0), ratio(.0f)
 	{
 	}
+
+	inline bool isZero() { return absolute == 0 && (ratio < 0.001f && ratio > -0.001f); }
+	inline short getValueReal(short v) { return absolute > 0 ? absolute : (short)(v * ratio); }
 };
 
 // margin

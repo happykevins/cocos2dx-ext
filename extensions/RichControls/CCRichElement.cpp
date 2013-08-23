@@ -603,49 +603,49 @@ bool REleHTMLNode::parseAlignment(const std::string& str, EAlignment& align)
 	return true;
 }
 
-void REleHTMLNode::processZone(RRect& zone, const ROptSize& width, const ROptSize& height, bool auto_size/*=false*/)
-{
-	short target_width = 0;
-	short target_height = 0;
-	if ( width.ratio )
-	{
-		target_width = zone.size.w * width.ratio;
-	}
-	if ( height.ratio )
-	{
-		target_height = zone.size.h * height.ratio;
-	}
-
-	target_width = RMAX(target_width, width.absolute);
-	target_height = RMAX(target_height, height.absolute);
-
-	// size == 0 represent auto grow
-	if ( zone.size.w == 0 )
-	{
-		zone.size.w = target_width;
-	}
-	else if ( auto_size )
-	{
-		zone.size.w = target_width == 0 ? 0 : RMAX(zone.size.w, target_width);
-	}
-	else
-	{
-		zone.size.w = target_width > 0 ? target_width : zone.size.w;
-	}
-
-	if ( zone.size.h == 0 )
-	{
-		zone.size.h = target_height;
-	}
-	else if ( auto_size )
-	{
-		zone.size.h = target_height == 0 ? 0 : RMAX(zone.size.h, target_height);
-	}
-	else
-	{
-		zone.size.h = target_height > 0 ? target_height : zone.size.h;
-	}
-}
+//void REleHTMLNode::processZone(RRect& zone, const ROptSize& width, const ROptSize& height, bool auto_fill_zone/*=false*/)
+//{
+//	short target_width = 0;
+//	short target_height = 0;
+//	if ( width.ratio )
+//	{
+//		target_width = zone.size.w * width.ratio;
+//	}
+//	if ( height.ratio )
+//	{
+//		target_height = zone.size.h * height.ratio;
+//	}
+//
+//	target_width = RMAX(target_width, width.absolute);
+//	target_height = RMAX(target_height, height.absolute);
+//
+//	// size == 0 represent auto grow
+//	if ( zone.size.w == 0 )
+//	{
+//		zone.size.w = target_width;
+//	}
+//	else if ( auto_fill_zone )
+//	{
+//		zone.size.w = target_width == 0 ? 0 : RMAX(zone.size.w, target_width);
+//	}
+//	else// not auto_fill_zone
+//	{
+//		zone.size.w = target_width > 0 ? target_width : zone.size.w;
+//	}
+//
+//	if ( zone.size.h == 0 )
+//	{
+//		zone.size.h = target_height;
+//	}
+//	else if ( auto_fill_zone )
+//	{
+//		zone.size.h = target_height == 0 ? 0 : RMAX(zone.size.h, target_height);
+//	}
+//	else// not auto_fill_zone
+//	{
+//		zone.size.h = target_height > 0 ? target_height : zone.size.h;
+//	}
+//}
 
 bool REleHTMLP::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 {
@@ -1038,23 +1038,19 @@ bool REleHTMLHR::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 void REleHTMLHR::onCachedCompositBegin(class ICompositCache* cache, RPos& pen)
 {
 	pen.y -= cache->getSpacing();
-	//m_rTempPadding = cache->getPadding();
-	//cache->setPadding(0);
 }
 
 void REleHTMLHR::onCachedCompositEnd(class ICompositCache* cache, RPos& pen)
 {
-	pen.y -= cache->getSpacing() - 1;
-	//cache->setPadding(m_rTempPadding);
+	pen.y -= cache->getSpacing();
 }
 
 void REleHTMLHR::onCompositStart(class IRichCompositor* compositor)
 {
 	RMetricsState* metrics = compositor->getMetricsState();
 	m_rMetrics.rect.size.w = metrics->zone.size.w - metrics->elements_cache->getPadding() * 2;
-	ROptSize height;
-	height.absolute = m_rSize;
-	REleHTMLNode::processZone(m_rMetrics.rect, m_rWidth, height);
+	m_rMetrics.rect.size.w = m_rWidth.getValueReal(m_rMetrics.rect.size.w);
+	m_rMetrics.rect.size.h = m_rSize;
 	m_rMetrics.rect.pos.y = m_rMetrics.rect.size.h;
 
 	if ( m_rColor == 0 )
@@ -1191,7 +1187,7 @@ void REleHTMLCell::onRenderPrev(RRichCanvas canvas)
 		if (m_rDirty && m_rColor)
 		{
 			CCNode* drawNode = createDrawSolidPolygonNode(canvas);
-			drawNode->setZOrder(ZORDER_OVERLAY);
+			drawNode->setZOrder(ZORDER_BACKGROUND);
 			canvas.root->addCCNode(drawNode);
 		}
 
@@ -1211,7 +1207,8 @@ void REleHTMLCell::onCompositStatePushed(class IRichCompositor* compositor)
 	RMetricsState* mstate = compositor->getMetricsState();
 	mstate->elements_cache = &m_rLineCache;
 
-	processZone(mstate->zone, m_rWidth, m_rHeight, false);
+	mstate->zone.size.w = m_rRow->getCellWidth(m_rIndexNumber, m_rWidth);
+	mstate->zone.size.h = m_rHeight.getValueReal(mstate->zone.size.h);
 	m_rMetrics.rect.size = mstate->zone.size;
 }
 
@@ -1222,7 +1219,7 @@ void REleHTMLCell::onCompositChildrenEnd(class IRichCompositor* compositor)
 }
 
 REleHTMLCell::REleHTMLCell(class REleHTMLRow* row)
-	: m_rRow(row), m_rHAlignSpecified(false), m_rVAlignSpecified(false),
+	: m_rRow(row), m_rHAlignSpecified(false), m_rVAlignSpecified(false), m_rIndexNumber(0),
 	m_rHAlignment(e_align_left), m_rVAlignment(e_align_bottom)
 {
 	// content alignment should not effect
@@ -1241,6 +1238,11 @@ bool REleHTMLRow::onParseAttributes(class IRichParser* parser, attrs_t* attrs )
 	return true;
 }
 
+void REleHTMLRow::onCompositStatePushed(class IRichCompositor* compositor)
+{
+	m_rLeftWidth = m_rTable->getZoneWidth();
+}
+
 std::vector<class REleHTMLCell*>& REleHTMLRow::getCells() 
 { 
 	return m_rCells; 
@@ -1251,7 +1253,10 @@ void REleHTMLRow::addChildren(IRichElement* child)
 	REleHTMLNode::addChildren(child);
 
 	if(dynamic_cast<class REleHTMLCell*>(child))
+	{
+		dynamic_cast<class REleHTMLCell*>(child)->setIndex((int)m_rCells.size());
 		m_rCells.push_back(dynamic_cast<class REleHTMLCell*>(child));
+	}
 }
 
 class REleHTMLTable* REleHTMLRow::getTable()
@@ -1259,9 +1264,30 @@ class REleHTMLTable* REleHTMLRow::getTable()
 	return m_rTable;
 }
 
+short REleHTMLRow::getCellWidth(int index, ROptSize width)
+{
+	CCAssert(index < (int)m_rCells.size(), "Invalid Cell Index!");
+	if ( (m_rLeftWidth == 0 && width.isZero()) || m_rCells.size() == 0 )
+		return 0;
+
+	short returned_width = 0;
+	if ( width.isZero() )
+	{
+		returned_width =  m_rLeftWidth / (m_rCells.size() - index);
+	}
+	else
+	{
+		returned_width = width.getValueReal(m_rTable->getZoneWidth());
+	}
+
+	m_rLeftWidth -= returned_width;
+	m_rLeftWidth = RMAX(0, m_rLeftWidth);
+	return returned_width;
+}
+
 REleHTMLRow::REleHTMLRow(class REleHTMLTable* table)
 	: m_rTable(table), m_rHAlignSpecified(false), m_rVAlignSpecified(false),
-	m_rHAlignment(e_align_left), m_rVAlignment(e_align_bottom)
+	m_rHAlignment(e_align_left), m_rVAlignment(e_align_bottom), m_rLeftWidth(0)
 {
 
 }
@@ -1404,7 +1430,8 @@ void REleHTMLTable::onCompositStatePushed(class IRichCompositor* compositor)
 	RMetricsState* mstate = compositor->getMetricsState();
 	mstate->elements_cache = &m_rTableCache;
 
-	processZone(mstate->zone, m_rWidth, ROptSize(), true);
+	mstate->zone.size.w = m_rWidth.getValueReal(mstate->zone.size.w);
+	mstate->zone.size.h = 0;
 
 	// except border, spacing, padding
 	size_t cols =  m_rRows.empty() ? 0 : m_rRows[0]->getCells().size();
@@ -1413,6 +1440,8 @@ void REleHTMLTable::onCompositStatePushed(class IRichCompositor* compositor)
 
 	mstate->zone.size.w = RMAX(0, mstate->zone.size.w);
 	mstate->zone.size.h = RMAX(0, mstate->zone.size.h);
+
+	m_rZoneWidth = mstate->zone.size.w;
 }
 
 void REleHTMLTable::onCompositChildrenEnd(class IRichCompositor* compositor)
@@ -1622,6 +1651,7 @@ REleHTMLTable::REleHTMLTable()
 , m_rHAlignSpecified(false)
 , m_rHAlign(e_align_left)
 , m_rTempAlign(e_align_left)
+, m_rZoneWidth(0)
 {
 	m_rTableCache.setTable(this);
 }
