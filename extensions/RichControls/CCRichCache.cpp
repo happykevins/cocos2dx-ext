@@ -145,6 +145,9 @@ RRect RLineCache::flush(class IRichCompositor* compositor)
 		line_rect.size.w = RMAX(zone.size.w, line_rect.size.w + getPadding() * 2); // auto rect
 	for ( element_list_t::iterator it = line->begin(); it != line->end(); it++ )
 	{
+		// prev composit event
+		(*it)->onCachedCompositBegin(this, pen);
+
 		if ( it == line_marks[line_mark_idx] )
 		{
 			short lwidth = line_widths[line_mark_idx];
@@ -169,6 +172,9 @@ RRect RLineCache::flush(class IRichCompositor* compositor)
 		RPos pos = (*it)->getLocalPosition();
 		(*it)->setLocalPositionX(mstate->pen_x + pos.x + align_correct_x);
 		(*it)->setLocalPositionY(mstate->pen_y + pos.y);
+
+		// post composit event
+		(*it)->onCachedCompositEnd(this, pen);
 	}
 
 	line_rect.pos.y = mstate->pen_y;
@@ -234,6 +240,7 @@ RRect RHTMLTableCache::flush(class IRichCompositor* compositor)
 	// table content size
 	std::vector<short> row_heights;
 	std::vector<short> col_widths;
+	std::vector<bool> width_set;
 	short max_row_width = 0;
 	short max_row_height = 0;
 	for ( element_list_t::iterator it = m_rCached.begin(); it != m_rCached.end(); it++ )
@@ -253,10 +260,34 @@ RRect RHTMLTableCache::flush(class IRichCompositor* compositor)
 			if ( i == col_widths.size() )
 			{
 				col_widths.push_back(cells[i]->getMetrics()->rect.size.w + getPadding() * 2);
+				width_set.push_back(cells[i]->isWidthSet());
 			}
 			else
 			{
-				col_widths[i] = RMAX(col_widths[i], cells[i]->getMetrics()->rect.size.w + getPadding() * 2);
+				if (width_set[i])
+				{
+					if (cells[i]->isWidthSet())
+					{
+						col_widths[i] = RMAX(col_widths[i], cells[i]->getMetrics()->rect.size.w + getPadding() * 2);
+					}
+					else
+					{
+						// do nothing
+					}
+				}
+				else
+				{
+					if (cells[i]->isWidthSet())
+					{
+						col_widths[i] = cells[i]->getMetrics()->rect.size.w + getPadding() * 2;
+						width_set[i] = true;
+					}
+					else
+					{
+						// do nothing use the first row default width
+						//col_widths[i] = RMIN(col_widths[i], cells[i]->getMetrics()->rect.size.w + getPadding() * 2);
+					}
+				}
 			}
 
 			current_row_height = RMAX(current_row_height, cells[i]->getMetrics()->rect.size.h);

@@ -162,9 +162,9 @@ const char* CCRichNode::getStringUTF8()
 	return m_rRichString.c_str();
 }
 
-IRichAtlas* CCRichNode::findAtlas(class CCTexture2D* texture, unsigned int color_rgba)
+IRichAtlas* CCRichNode::findAtlas(class CCTexture2D* texture, unsigned int color_rgba, int zorder /*= 0*/)
 {
-	return findColoredTextureAtlas(texture, color_rgba);
+	return findColoredTextureAtlas(texture, color_rgba, zorder);
 }
 
 void CCRichNode::addOverlay(IRichElement* overlay)
@@ -175,6 +175,11 @@ void CCRichNode::addOverlay(IRichElement* overlay)
 void CCRichNode::addCCNode(class CCNode* node)
 {
 	getOverlay()->addChild(node);
+}
+
+void CCRichNode::removeCCNode(class CCNode* node)
+{
+	getOverlay()->removeChild(node);
 }
 
 CCRichOverlay* CCRichNode::getOverlay()
@@ -241,7 +246,10 @@ void CCRichNode::clearStates()
 
 	// clear overlays
 	if (m_rOverlays)
+	{
 		m_rOverlays->reset();
+		m_rOverlays->removeAllChildren();
+	}
 
 	updateContentSize();
 }
@@ -272,12 +280,12 @@ void CCRichNode::clearAtlasMap()
 	{
 		CCRichAtlas* atlas = *it;
 		CC_SAFE_RELEASE(atlas);
-		this->removeChild(atlas);
+		getOverlay()->removeChild(atlas);
 	}
 	m_rAtlasList.clear();
 }
 
-CCRichAtlas* CCRichNode::findColoredTextureAtlas(CCTexture2D* texture, unsigned int color_rgba)
+CCRichAtlas* CCRichNode::findColoredTextureAtlas(CCTexture2D* texture, unsigned int color_rgba, int zorder)
 {
 	if ( texture == NULL || color_rgba == 0 )
 	{
@@ -310,7 +318,7 @@ CCRichAtlas* CCRichNode::findColoredTextureAtlas(CCTexture2D* texture, unsigned 
 		atlas->retain();
 		m_rAtlasList.push_back(atlas);
 
-		addChild(atlas);
+		getOverlay()->addChild(atlas, zorder);
 	}
 	else
 	{
@@ -322,8 +330,6 @@ CCRichAtlas* CCRichNode::findColoredTextureAtlas(CCTexture2D* texture, unsigned 
 
 void CCRichNode::draw()
 {
-	CCNode::draw();
-
 	RRichCanvas canvas;
 	canvas.root = this;
 	canvas.rect/*.size*/ = getCompositor()->getRect()/*.size*/;

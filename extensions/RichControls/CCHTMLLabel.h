@@ -103,10 +103,10 @@ protected:
 //	- <hr>		: id; width; size; style="color"
 //	- <font>	: id; face; color
 //	- <u>		: id; 
-//	- <table>	: id; width; align; cellspadding; cellsspacing; border; bgcolor; bordercolor; frames; rules
+//	- <table>	: id; width; align; cellspadding; cellsspacing; border; bgcolor; bordercolor; frame; rules
 //	- <tr>		: id; align; valign
-//	- <td>		: id; width; height; align; valign; padding; spacing; nowrap; bgcolor
-//	- <img>		: id; src; alt(no use); style="textrue-rect:<TOP>px <RIGHT>px <BOTTOM>px <LEFT>px"
+//	- <td>		: id; width; height; align; valign; padding; spacing; nowrap; bgcolor; bg-image; bg-rect
+//	- <img>		: id; src; alt(no use); texture-rect="<TOP>px <LEFT>px <BOTTOM>px <LEFT>px"
 //	- <a>		: id; name; href; bgcolor
 //	- <button>	: id; name; value; bgcolor
 //
@@ -117,15 +117,15 @@ class CCHTMLLabel : public CCNode, public CCLabelProtocol
 {
 public:
 	static CCHTMLLabel* create();
-	static CCHTMLLabel* createWithString(const char* rich_string, const CCSize& preferred_size, const char* font_alias = DFONT_DEFAULT_FONTALIAS);
-	bool initWithString(const char* rich_string, const CCSize& preferred_size, const char* font_alias = DFONT_DEFAULT_FONTALIAS);
+	static CCHTMLLabel* createWithString(const char* utf8_str, const CCSize& preferred_size, const char* font_alias = DFONT_DEFAULT_FONTALIAS);
+	bool initWithString(const char* utf8_str, const CCSize& preferred_size, const char* font_alias = DFONT_DEFAULT_FONTALIAS);
 
 	// from CCLabelProtocol
-	virtual void setString(const char *label);
+	virtual void setString(const char *utf8_str);
 	virtual const char* getString(void);
 
 	// append string, faster if you only add additional string to tail
-	virtual void appendString(const char *label);
+	virtual void appendString(const char *utf8_str);
 
 	// from CCLayer
 	virtual void draw();

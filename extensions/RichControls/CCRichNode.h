@@ -54,9 +54,10 @@ public:
 	virtual void setStringUTF8(const char* utf8_str);
 	virtual void appendStringUTF8(const char* utf8_str);
 	virtual const char* getStringUTF8();
-	virtual IRichAtlas* findAtlas(class CCTexture2D* texture, unsigned int color_rgba);
+	virtual IRichAtlas* findAtlas(class CCTexture2D* texture, unsigned int color_rgba, int zorder = ZORDER_CONTEXT);
 	virtual void addOverlay(IRichElement* overlay);
 	virtual void addCCNode(class CCNode* node);
+	virtual void removeCCNode(class CCNode* node);
 	class CCRichOverlay* getOverlay();
 
 	// 
@@ -95,7 +96,7 @@ private:
 	void clearStates();
 	void clearRichElements();
 	void clearAtlasMap();
-	class CCRichAtlas* findColoredTextureAtlas(CCTexture2D* texture, unsigned int color_rgba);
+	class CCRichAtlas* findColoredTextureAtlas(CCTexture2D* texture, unsigned int color_rgba, int zorder);
 
 protected:
 	class CCNode* m_rContainer;
