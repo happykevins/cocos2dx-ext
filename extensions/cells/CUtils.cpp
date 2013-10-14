@@ -309,14 +309,14 @@ std::string CUtils::filehash_md5str(FILE* fp, char* buf, size_t buf_size, double
 // directory access
 bool CUtils::access(const char* path, int mode)
 {
-	return ::access(path, mode) == 0;
+	return ::_access(path, mode) == 0;
 }
 
 // make directory
 bool CUtils::mkdir(const char* path)
 {
 #if defined(_WIN32)
-	return ::mkdir(path) == 0;
+	return ::_mkdir(path) == 0;
 #else
 	return ::mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO) == 0;
 #endif
@@ -342,7 +342,8 @@ bool CUtils::builddir(const char* path)
 			{
 				if ( !CUtils::mkdir(bpath.c_str()) )
 				{
-					return false;
+					// FIXED: if return here, multi-thread mkdir will cause error.
+					//return false;
 				}
 			}
 			dummy = true;
