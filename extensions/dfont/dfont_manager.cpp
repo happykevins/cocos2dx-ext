@@ -536,8 +536,8 @@ FontCatalog* FontFactory::another_alias(const char* another_alias, const char* o
 }
 
 FontCatalog* FontFactory::create_font(
-	const char* alias, const char* font_name, int color, int size_pt,
-	EFontStyle style/*=e_plain*/, float strength/*=1.0f*/, int secondary_color/*=0xff000000*/, 
+	const char* alias, const char* font_name, unsigned int color, int size_pt,
+	EFontStyle style/*=e_plain*/, float strength/*=1.0f*/, unsigned int secondary_color/*=0xff000000*/, 
 	int faceidx/*=0*/, int ppi/*=DFONT_DEFAULT_FONTPPI*/
 	)
 {

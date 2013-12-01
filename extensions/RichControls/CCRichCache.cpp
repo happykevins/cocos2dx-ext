@@ -310,7 +310,7 @@ RRect RHTMLTableCache::flush(class IRichCompositor* compositor)
 	short pen_x = 0;
 	short pen_y = -m_rTable->m_rBorder;
 	size_t row_idx = 0;
-	for ( element_list_t::iterator it = m_rCached.begin(); it != m_rCached.end(); it++, row_idx++ )
+	for ( element_list_t::iterator it = m_rCached.begin(); it != m_rCached.end(); it++ )
 	{
 		REleHTMLRow* row = dynamic_cast<REleHTMLRow*>(*it);
 		if ( !row )
@@ -347,6 +347,7 @@ RRect RHTMLTableCache::flush(class IRichCompositor* compositor)
 
 		pen_y -= row_heights[row_idx];
 		pen_y -= spacing;
+        row_idx++;
 	}
 
 	table_rect.size.h += m_rTable->m_rBorder * 2 + spacing * (row_heights.size() - 1);
